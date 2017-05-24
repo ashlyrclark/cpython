@@ -3207,8 +3207,12 @@ type_dealloc(PyTypeObject *type)
     Py_XDECREF(et->ht_name);
     Py_XDECREF(et->ht_qualname);
     Py_XDECREF(et->ht_slots);
-    if (et->ht_cached_keys)
+    if (et->ht_cached_keys) {
         _PyDictKeys_DecRef(et->ht_cached_keys);
+    }
+    if (type->tp_flags & PY_TPFLAGS_HAVE_MODULE) {
+        Py_XDECREF(et->ht_module);
+    }
     Py_TYPE(type)->tp_free((PyObject *)type);
 }
 
