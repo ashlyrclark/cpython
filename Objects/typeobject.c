@@ -2791,6 +2791,38 @@ static const short slotoffsets[] = {
 };
 
 PyObject *
+PyType_FromModuleAndSpec(PyObject *module, PyType_Spec *spec,
+                         PyObject *bases)
+{
+    PyHeapTypeObject *res;
+    PyTypeObject *type;
+
+    res = (PyHeapTypeObject *)PyType_FromSpecWithBases(spec, bases);
+    type = &res->ht_type;
+
+    if (module != NULL) {
+        res->ht_module = module;
+        Py_INCREF(module);
+        type->tp_flags |= PY_TPFLAGS_HAVE_MODULE;
+    }
+
+    return (PyObject *)res;
+}
+
+PyObject *
+PyType_GetModule(PyTypeObject *type)
+{
+    if (type->tp_flags & PY_TPFLAGS_HAVE_MODULE) {
+        return ((PyHeapTypeObject *)type)->ht_module;
+    }
+    PyErr_Format(PyExc_SystemError,
+                 "Type %s does not have any module.",
+                 type->tp_name);
+    return NULL;
+
+}
+
+PyObject *
 PyType_FromSpecWithBases(PyType_Spec *spec, PyObject *bases)
 {
     PyHeapTypeObject *res = (PyHeapTypeObject*)PyType_GenericAlloc(&PyType_Type, 0);

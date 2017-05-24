@@ -1107,7 +1107,7 @@ class SizeofTest(unittest.TestCase):
                   '3P'                  # PyMappingMethods
                   '10P'                 # PySequenceMethods
                   '2P'                  # PyBufferProcs
-                  '4P')
+                  '5P')
         # Separate block for PyDictKeysObject with 8 keys and 5 entries
         s += calcsize("2nP2n") + 8 + 5*calcsize("n2P")
         # class

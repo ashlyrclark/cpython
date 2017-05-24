@@ -455,6 +455,10 @@ PyAPI_FUNC(PyObject*) PyType_FromSpecWithBases(PyType_Spec*, PyObject*);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03040000
 PyAPI_FUNC(void*) PyType_GetSlot(PyTypeObject*, int);
 #endif
+#if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03070000
+PyAPI_FUNC(PyObject*) PyType_FromModuleAndSpec(PyObject*, PyType_Spec*, PyObject*);
+PyAPI_FUNC(PyObject*) PyType_GetModule(PyTypeObject*);
+#endif
 
 #ifndef Py_LIMITED_API
 /* The *real* layout of a type object when allocated on the heap */
@@ -471,7 +475,7 @@ typedef struct _heaptypeobject {
                                       a given operator (e.g. __getitem__).
                                       see add_operators() in typeobject.c . */
     PyBufferProcs as_buffer;
-    PyObject *ht_name, *ht_slots, *ht_qualname;
+    PyObject *ht_name, *ht_slots, *ht_qualname, *ht_module;
     struct _dictkeysobject *ht_cached_keys;
     /* here are optional user slots, followed by the members. */
 } PyHeapTypeObject;
@@ -665,6 +669,7 @@ given type object has a specified feature.
 
 /* Type structure has tp_finalize member (3.4) */
 #define Py_TPFLAGS_HAVE_FINALIZE (1UL << 0)
+#define PY_TPFLAGS_HAVE_MODULE (1UL << 1)
 
 #ifdef Py_LIMITED_API
 #define PyType_HasFeature(t,f)  ((PyType_GetFlags(t) & (f)) != 0)

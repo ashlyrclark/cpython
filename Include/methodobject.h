@@ -20,6 +20,8 @@ typedef PyObject *(*_PyCFunctionFast) (PyObject *self, PyObject **args,
                                        Py_ssize_t nargs, PyObject *kwnames);
 typedef PyObject *(*PyCFunctionWithKeywords)(PyObject *, PyObject *,
                                              PyObject *);
+typedef PyObject *(*PyCMethod)(PyObject *, PyTypeObject *,
+                               PyObject *, PyObject *);
 typedef PyObject *(*PyNoArgsFunction)(PyObject *);
 
 PyAPI_FUNC(PyCFunction) PyCFunction_GetFunction(PyObject *);
@@ -68,6 +70,7 @@ PyAPI_FUNC(PyObject *) PyCFunction_NewEx(PyMethodDef *, PyObject *,
 /* #define METH_OLDARGS  0x0000   -- unsupported now */
 #define METH_VARARGS  0x0001
 #define METH_KEYWORDS 0x0002
+#define METH_METHOD   0x0003
 /* METH_NOARGS and METH_O must not be combined with the flags above. */
 #define METH_NOARGS   0x0004
 #define METH_O        0x0008
@@ -95,6 +98,11 @@ typedef struct {
     PyObject    *m_module; /* The __module__ attribute, can be anything */
     PyObject    *m_weakreflist; /* List of weak references */
 } PyCFunctionObject;
+
+typedef struct {
+    PyCFunctionObject func;
+    PyTypeObject *mm_class;
+} PyCMethodObject;
 
 PyAPI_FUNC(PyObject *) _PyMethodDef_RawFastCallDict(
     PyMethodDef *method,
