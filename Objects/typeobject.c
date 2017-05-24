@@ -2556,6 +2556,7 @@ type_new(PyTypeObject *metatype, PyObject *args, PyObject *kwds)
     Py_INCREF(name);
     et->ht_name = name;
     et->ht_slots = slots;
+    et->ht_module = NULL;
     slots = NULL;
 
     /* Initialize tp_flags */
@@ -2812,8 +2813,10 @@ PyType_FromModuleAndSpec(PyObject *module, PyType_Spec *spec,
 PyObject *
 PyType_GetModule(PyTypeObject *type)
 {
+    PyHeapTypeObject *et = (PyHeapTypeObject *)type;
     if (type->tp_flags & PY_TPFLAGS_HAVE_MODULE) {
-        return ((PyHeapTypeObject *)type)->ht_module;
+        Py_INCREF(et->ht_module);
+        return et->ht_module;
     }
     PyErr_Format(PyExc_SystemError,
                  "Type %s does not have any module.",
@@ -3405,6 +3408,10 @@ type_traverse(PyTypeObject *type, visitproc visit, void *arg)
        ((PyHeapTypeObject *)type)->ht_slots, because they can't be involved
        in cycles; tp_subclasses is a list of weak references,
        and slots is a tuple of strings. */
+
+    if (type->tp_flags & PY_TPFLAGS_HAVE_MODULE){
+        Py_VISIT(((PyHeapTypeObject *)type)->ht_module);
+    }
 
     return 0;
 }
