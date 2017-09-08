@@ -353,6 +353,7 @@ PyModule_ExecInModule(PyObject *module, PyModuleDef *def)
     PyModuleDef_Slot *cur_slot;
     const char *name;
     PyObject *nameobj;
+    int create_found = 0, cython_init_found = 0;
 
     if (!PyModule_Check(module)) {
         PyErr_BadInternalCall();
@@ -381,13 +382,21 @@ PyModule_ExecInModule(PyObject *module, PyModuleDef *def)
 
     for (cur_slot = def->m_slots; cur_slot && cur_slot->slot; cur_slot++) {
         if (cur_slot->slot == Py_mod_create) {
-            /* Modules with Py_mod_create cannot be directly executed */
-            PyErr_Format(
-                PyExc_ImportError,
-                "This module cannot be directly executed",
-                name);
-            goto error;
+            create_found = 1;
         }
+        if (cur_slot->slot == Py_mod_cython) {
+            cython_init_found = 1;
+        }
+    }
+
+
+    if (create_found && !cython_init_found) {
+        /* Non-cython modules with Py_mod_create cannot be directly executed */
+        PyErr_Format(
+            PyExc_ImportError,
+            "This module cannot be directly executed",
+            name);
+        goto error;
     }
 
     if (def->m_methods != NULL) {
@@ -463,6 +472,9 @@ PyModule_ExecDef(PyObject *module, PyModuleDef *def)
                         name);
                     return -1;
                 }
+                break;
+            case Py_mod_cython:
+                /* flag slot only */
                 break;
             default:
                 PyErr_Format(
