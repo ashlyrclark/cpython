@@ -25,46 +25,27 @@ static struct PyMethodDef blake2mod_functions[] = {
     {NULL, NULL}
 };
 
-static struct PyModuleDef blake2_module = {
-    PyModuleDef_HEAD_INIT,
-    "_blake2",
-    blake2mod__doc__,
-    -1,
-    blake2mod_functions,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
 #define ADD_INT(d, name, value) do { \
     PyObject *x = PyLong_FromLong(value); \
     if (!x) { \
         Py_DECREF(m); \
-        return NULL; \
+        return -1; \
     } \
     if (PyDict_SetItemString(d, name, x) < 0) { \
         Py_DECREF(m); \
-        return NULL; \
+        return -1; \
     } \
     Py_DECREF(x); \
 } while(0)
 
-
-PyMODINIT_FUNC
-PyInit__blake2(void)
-{
-    PyObject *m;
+static int
+blake2_exec(PyObject *m) {
     PyObject *d;
-
-    m = PyModule_Create(&blake2_module);
-    if (m == NULL)
-        return NULL;
 
     /* BLAKE2b */
     Py_TYPE(&PyBlake2_BLAKE2bType) = &PyType_Type;
     if (PyType_Ready(&PyBlake2_BLAKE2bType) < 0) {
-        return NULL;
+        return -1;
     }
 
     Py_INCREF(&PyBlake2_BLAKE2bType);
@@ -84,7 +65,7 @@ PyInit__blake2(void)
     /* BLAKE2s */
     Py_TYPE(&PyBlake2_BLAKE2sType) = &PyType_Type;
     if (PyType_Ready(&PyBlake2_BLAKE2sType) < 0) {
-        return NULL;
+        return -1;
     }
 
     Py_INCREF(&PyBlake2_BLAKE2sType);
@@ -100,6 +81,29 @@ PyInit__blake2(void)
     PyModule_AddIntConstant(m, "BLAKE2S_PERSON_SIZE", BLAKE2S_PERSONALBYTES);
     PyModule_AddIntConstant(m, "BLAKE2S_MAX_KEY_SIZE", BLAKE2S_KEYBYTES);
     PyModule_AddIntConstant(m, "BLAKE2S_MAX_DIGEST_SIZE", BLAKE2S_OUTBYTES);
+    
+    return 0;
+}
 
-    return m;
+static PyModuleDef_Slot blake2_slots[] = {
+    {Py_mod_exec, blake2_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef blake2_module = {
+    PyModuleDef_HEAD_INIT,
+    "_blake2",
+    blake2mod__doc__,
+    0,
+    blake2mod_functions,
+    blake2_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__blake2(void)
+{
+    return PyModuleDef_Init(&blake2_module);
 }
