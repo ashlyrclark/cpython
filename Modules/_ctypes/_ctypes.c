@@ -5401,53 +5401,34 @@ wstring_at(const wchar_t *ptr, int size)
 }
 #endif
 
-
-static struct PyModuleDef _ctypesmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_ctypes",
-    module_docs,
-    -1,
-    _ctypes_module_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__ctypes(void)
-{
-    PyObject *m;
-
+static int
+_ctypes_exec(PyObject *m) {
 /* Note:
    ob_type is the metatype (the 'type'), defaults to PyType_Type,
    tp_base is the base type, defaults to 'object' aka PyBaseObject_Type.
 */
     PyEval_InitThreads();
-    m = PyModule_Create(&_ctypesmodule);
-    if (!m)
-        return NULL;
 
     _ctypes_ptrtype_cache = PyDict_New();
     if (_ctypes_ptrtype_cache == NULL)
-        return NULL;
+        return -1;
 
     PyModule_AddObject(m, "_pointer_type_cache", (PyObject *)_ctypes_ptrtype_cache);
 
     _unpickle = PyObject_GetAttrString(m, "_unpickle");
     if (_unpickle == NULL)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&PyCArg_Type) < 0)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&PyCThunk_Type) < 0)
-        return NULL;
+        return -1;
 
     /* StgDict is derived from PyDict_Type */
     PyCStgDict_Type.tp_base = &PyDict_Type;
     if (PyType_Ready(&PyCStgDict_Type) < 0)
-        return NULL;
+        return -1;
 
     /*************************************************
      *
@@ -5456,27 +5437,27 @@ PyInit__ctypes(void)
 
     PyCStructType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&PyCStructType_Type) < 0)
-        return NULL;
+        return -1;
 
     UnionType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&UnionType_Type) < 0)
-        return NULL;
+        return -1;
 
     PyCPointerType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&PyCPointerType_Type) < 0)
-        return NULL;
+        return -1;
 
     PyCArrayType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&PyCArrayType_Type) < 0)
-        return NULL;
+        return -1;
 
     PyCSimpleType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&PyCSimpleType_Type) < 0)
-        return NULL;
+        return -1;
 
     PyCFuncPtrType_Type.tp_base = &PyType_Type;
     if (PyType_Ready(&PyCFuncPtrType_Type) < 0)
-        return NULL;
+        return -1;
 
     /*************************************************
      *
@@ -5484,47 +5465,47 @@ PyInit__ctypes(void)
      */
 
     if (PyType_Ready(&PyCData_Type) < 0)
-        return NULL;
+        return -1;
 
     Py_TYPE(&Struct_Type) = &PyCStructType_Type;
     Struct_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&Struct_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&Struct_Type);
     PyModule_AddObject(m, "Structure", (PyObject *)&Struct_Type);
 
     Py_TYPE(&Union_Type) = &UnionType_Type;
     Union_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&Union_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&Union_Type);
     PyModule_AddObject(m, "Union", (PyObject *)&Union_Type);
 
     Py_TYPE(&PyCPointer_Type) = &PyCPointerType_Type;
     PyCPointer_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&PyCPointer_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&PyCPointer_Type);
     PyModule_AddObject(m, "_Pointer", (PyObject *)&PyCPointer_Type);
 
     Py_TYPE(&PyCArray_Type) = &PyCArrayType_Type;
     PyCArray_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&PyCArray_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&PyCArray_Type);
     PyModule_AddObject(m, "Array", (PyObject *)&PyCArray_Type);
 
     Py_TYPE(&Simple_Type) = &PyCSimpleType_Type;
     Simple_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&Simple_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&Simple_Type);
     PyModule_AddObject(m, "_SimpleCData", (PyObject *)&Simple_Type);
 
     Py_TYPE(&PyCFuncPtr_Type) = &PyCFuncPtrType_Type;
     PyCFuncPtr_Type.tp_base = &PyCData_Type;
     if (PyType_Ready(&PyCFuncPtr_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&PyCFuncPtr_Type);
     PyModule_AddObject(m, "CFuncPtr", (PyObject *)&PyCFuncPtr_Type);
 
@@ -5535,7 +5516,7 @@ PyInit__ctypes(void)
 
     /* PyCField_Type is derived from PyBaseObject_Type */
     if (PyType_Ready(&PyCField_Type) < 0)
-        return NULL;
+        return -1;
 
     /*************************************************
      *
@@ -5544,11 +5525,11 @@ PyInit__ctypes(void)
 
     DictRemover_Type.tp_new = PyType_GenericNew;
     if (PyType_Ready(&DictRemover_Type) < 0)
-        return NULL;
+        return -1;
 
 #ifdef MS_WIN32
     if (create_comerror() < 0)
-        return NULL;
+        return -1;
     PyModule_AddObject(m, "COMError", ComError);
 
     PyModule_AddObject(m, "FUNCFLAG_HRESULT", PyLong_FromLong(FUNCFLAG_HRESULT));
@@ -5588,7 +5569,30 @@ PyInit__ctypes(void)
         Py_INCREF(PyExc_ArgError);
         PyModule_AddObject(m, "ArgumentError", PyExc_ArgError);
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _ctype_slots[] = {
+    {Py_mod_exec, _ctypes_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _ctypesmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_ctypes",
+    module_docs,
+    0,
+    _ctypes_module_methods,
+    _ctype_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__ctypes(void)
+{
+    return PyModuleDef_Init(&_ctypesmodule);
 }
 
 /*
