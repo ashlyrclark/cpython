@@ -50,7 +50,7 @@ static struct PyModuleDef cryptmodule = {
     PyModuleDef_HEAD_INIT,
     "_crypt",
     NULL,
-    -1,
+    0,
     crypt_methods,
     NULL,
     NULL,
@@ -61,5 +61,5 @@ static struct PyModuleDef cryptmodule = {
 PyMODINIT_FUNC
 PyInit__crypt(void)
 {
-    return PyModule_Create(&cryptmodule);
+    return PyModuleDef_Init(&cryptmodule);
 }
