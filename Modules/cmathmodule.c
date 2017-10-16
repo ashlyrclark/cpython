@@ -1262,28 +1262,8 @@ static PyMethodDef cmath_methods[] = {
     {NULL, NULL}  /* sentinel */
 };
 
-
-static struct PyModuleDef cmathmodule = {
-    PyModuleDef_HEAD_INIT,
-    "cmath",
-    module_doc,
-    -1,
-    cmath_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_cmath(void)
-{
-    PyObject *m;
-
-    m = PyModule_Create(&cmathmodule);
-    if (m == NULL)
-        return NULL;
-
+static int
+cmath_exec(PyObject *m) {
     PyModule_AddObject(m, "pi",
                        PyFloat_FromDouble(Py_MATH_PI));
     PyModule_AddObject(m, "e", PyFloat_FromDouble(Py_MATH_E));
@@ -1409,5 +1389,29 @@ PyInit_cmath(void)
       C(INF,N) C(U,U) C(INF,-0.) C(INF,0.)   C(U,U) C(INF,N) C(INF,N)
       C(N,N)   C(N,N) C(N,0.)    C(N,0.)     C(N,N) C(N,N)   C(N,N)
     })
-    return m;
+    return 0;
+}
+
+
+static PyModuleDef_Slot cmath_slots[] = {
+    {Py_mod_exec, cmath_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef cmathmodule = {
+    PyModuleDef_HEAD_INIT,
+    "cmath",
+    module_doc,
+    0,
+    cmath_methods,
+    cmath_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_cmath(void)
+{
+    return PyModuleDef_Init(&cmathmodule);
 }
