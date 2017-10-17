@@ -615,14 +615,24 @@ all_ins(PyObject* m)
     return 0;
 }
 
+static int
+fcntl_exec(PyObject *m) {
+    /* Add some symbolic constants to the module */
+    return all_ins(m);
+}
+
+static PyModuleDef_Slot fcntl_slots[] = {
+    {Py_mod_exec, fcntl_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef fcntlmodule = {
     PyModuleDef_HEAD_INIT,
     "fcntl",
     module_doc,
-    -1,
+    0,
     fcntl_methods,
-    NULL,
+    fcntl_slots,
     NULL,
     NULL,
     NULL
@@ -631,16 +641,5 @@ static struct PyModuleDef fcntlmodule = {
 PyMODINIT_FUNC
 PyInit_fcntl(void)
 {
-    PyObject *m;
-
-    /* Create the module and add the functions and documentation */
-    m = PyModule_Create(&fcntlmodule);
-    if (m == NULL)
-        return NULL;
-
-    /* Add some symbolic constants to the module */
-    if (all_ins(m) < 0)
-        return NULL;
-
-    return m;
+    return PyModuleDef_Init(&fcntlmodule);
 }
