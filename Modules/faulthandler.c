@@ -1226,13 +1226,49 @@ static PyMethodDef module_methods[] = {
     {NULL, NULL}  /* sentinel */
 };
 
+#ifdef MS_WINDOWS
+static int
+faulthandler_exec(PyObject *m) {
+    /* Add constants for unit tests */
+    /* RaiseException() codes (prefixed by an underscore) */
+    if (PyModule_AddIntConstant(m, "_EXCEPTION_ACCESS_VIOLATION",
+                                EXCEPTION_ACCESS_VIOLATION))
+        return -1;
+    if (PyModule_AddIntConstant(m, "_EXCEPTION_INT_DIVIDE_BY_ZERO",
+                                EXCEPTION_INT_DIVIDE_BY_ZERO))
+        return -1;
+    if (PyModule_AddIntConstant(m, "_EXCEPTION_STACK_OVERFLOW",
+                                EXCEPTION_STACK_OVERFLOW))
+        return -1;
+
+    /* RaiseException() flags (prefixed by an underscore) */
+    if (PyModule_AddIntConstant(m, "_EXCEPTION_NONCONTINUABLE",
+                                EXCEPTION_NONCONTINUABLE))
+        return -1;
+    if (PyModule_AddIntConstant(m, "_EXCEPTION_NONCONTINUABLE_EXCEPTION",
+                                EXCEPTION_NONCONTINUABLE_EXCEPTION))
+        return -1;
+
+    return 0;
+}
+
+static PyModuleDef_Slot faulthandler_slots[] = {
+    {Py_mod_exec, faulthandler_exec},
+    {0, NULL}
+};
+#endif
+
 static struct PyModuleDef module_def = {
     PyModuleDef_HEAD_INIT,
     "faulthandler",
     module_doc,
     0, /* non-negative size to be able to unload the module */
     module_methods,
+#ifdef MS_WINDOWS
+    faulthandler_slots,
+#else
     NULL,
+#endif
     faulthandler_traverse,
     NULL,
     NULL
@@ -1241,33 +1277,7 @@ static struct PyModuleDef module_def = {
 PyMODINIT_FUNC
 PyInit_faulthandler(void)
 {
-    PyObject *m = PyModule_Create(&module_def);
-    if (m == NULL)
-        return NULL;
-
-    /* Add constants for unit tests */
-#ifdef MS_WINDOWS
-    /* RaiseException() codes (prefixed by an underscore) */
-    if (PyModule_AddIntConstant(m, "_EXCEPTION_ACCESS_VIOLATION",
-                                EXCEPTION_ACCESS_VIOLATION))
-        return NULL;
-    if (PyModule_AddIntConstant(m, "_EXCEPTION_INT_DIVIDE_BY_ZERO",
-                                EXCEPTION_INT_DIVIDE_BY_ZERO))
-        return NULL;
-    if (PyModule_AddIntConstant(m, "_EXCEPTION_STACK_OVERFLOW",
-                                EXCEPTION_STACK_OVERFLOW))
-        return NULL;
-
-    /* RaiseException() flags (prefixed by an underscore) */
-    if (PyModule_AddIntConstant(m, "_EXCEPTION_NONCONTINUABLE",
-                                EXCEPTION_NONCONTINUABLE))
-        return NULL;
-    if (PyModule_AddIntConstant(m, "_EXCEPTION_NONCONTINUABLE_EXCEPTION",
-                                EXCEPTION_NONCONTINUABLE_EXCEPTION))
-        return NULL;
-#endif
-
-    return m;
+    return PyModuleDef_Init(&module_def);
 }
 
 /* Call faulthandler.enable() if the PYTHONFAULTHANDLER environment variable
