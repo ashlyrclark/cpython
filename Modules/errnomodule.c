@@ -80,29 +80,13 @@ Symbols that are not relevant to the underlying system are not defined.\n\
 To map error codes to error messages, use the function os.strerror(),\n\
 e.g. os.strerror(2) could return 'No such file or directory'.");
 
-static struct PyModuleDef errnomodule = {
-    PyModuleDef_HEAD_INIT,
-    "errno",
-    errno__doc__,
-    -1,
-    errno_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_errno(void)
-{
-    PyObject *m, *d, *de;
-    m = PyModule_Create(&errnomodule);
-    if (m == NULL)
-        return NULL;
+static int
+errno_exec(PyObject *m) {
+    PyObject *d, *de;
     d = PyModule_GetDict(m);
     de = PyDict_New();
     if (!d || !de || PyDict_SetItemString(d, "errorcode", de) < 0)
-        return NULL;
+        return -1;
 
 /* Macro so I don't have to edit each and every line below... */
 #define inscode(d, ds, de, name, code, comment) _inscode(d, de, name, code)
@@ -931,5 +915,28 @@ PyInit_errno(void)
 #endif
 
     Py_DECREF(de);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot errno_slots[] = {
+    {Py_mod_exec, errno_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef errnomodule = {
+    PyModuleDef_HEAD_INIT,
+    "errno",
+    errno__doc__,
+    0,
+    errno_methods,
+    errno_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_errno(void)
+{
+    return PyModuleDef_Init(&errnomodule);
 }
