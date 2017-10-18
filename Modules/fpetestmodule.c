@@ -172,13 +172,29 @@ static double overflow(double b)
   return a;
 }
 
+static int
+fpetest_exec(PyObject *m) {
+    PyObject *d;
+
+    d = PyModule_GetDict(m);
+    fpe_error = PyErr_NewException("fpetest.error", NULL, NULL);
+    if (fpe_error != NULL)
+        PyDict_SetItemString(d, "error", fpe_error);
+    return 0;
+}
+
+static PyModuleDef_Slot fpetest_slot[] = {
+    {Py_mod_exec, fpetest_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef fpetestmodule = {
     PyModuleDef_HEAD_INIT,
     "fpetest",
     NULL,
-    -1,
+    0,
     fpetest_methods,
-    NULL,
+    fpetest_slots,
     NULL,
     NULL,
     NULL
@@ -186,14 +202,5 @@ static struct PyModuleDef fpetestmodule = {
 
 PyMODINIT_FUNC PyInit_fpetest(void)
 {
-    PyObject *m, *d;
-
-    m = PyModule_Create(&fpetestmodule);
-    if (m == NULL)
-    return NULL;
-    d = PyModule_GetDict(m);
-    fpe_error = PyErr_NewException("fpetest.error", NULL, NULL);
-    if (fpe_error != NULL)
-        PyDict_SetItemString(d, "error", fpe_error);
-    return m;
+    PyModuleDef_Init(&fpetestmodule);
 }
