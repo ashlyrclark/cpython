@@ -224,13 +224,28 @@ static void sigfpe_handler(int signo)
     }
 }
 
+static int
+fpectl_exec(PyObject *m) {
+    PyObject *d;
+    d = PyModule_GetDict(m);
+    fpe_error = PyErr_NewException("fpectl.error", NULL, NULL);
+    if (fpe_error != NULL)
+        PyDict_SetItemString(d, "error", fpe_error);
+    return 0;
+}
+
+static PyModuleDef_Slot fpectl_slots[] = {
+    {Py_mod_exec, fpectl_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef fpectlmodule = {
         PyModuleDef_HEAD_INIT,
         "fpectl",
         NULL,
-        -1,
+        0,
         fpectl_methods,
-        NULL,
+        fpectl_slots,
         NULL,
         NULL,
         NULL
@@ -238,15 +253,7 @@ static struct PyModuleDef fpectlmodule = {
 
 PyMODINIT_FUNC PyInit_fpectl(void)
 {
-    PyObject *m, *d;
-    m = PyModule_Create(&fpectlmodule);
-    if (m == NULL)
-        return NULL;
-    d = PyModule_GetDict(m);
-    fpe_error = PyErr_NewException("fpectl.error", NULL, NULL);
-    if (fpe_error != NULL)
-        PyDict_SetItemString(d, "error", fpe_error);
-    return m;
+    return PyModuleDef_Init(&fpectlmodule);
 }
 
 #ifdef __cplusplus
