@@ -626,28 +626,12 @@ static PyMethodDef dbmmodule_methods[] = {
     { 0, 0 },
 };
 
-
-static struct PyModuleDef _gdbmmodule = {
-        PyModuleDef_HEAD_INIT,
-        "_gdbm",
-        gdbmmodule__doc__,
-        -1,
-        dbmmodule_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC
-PyInit__gdbm(void) {
-    PyObject *m, *d, *s;
+static int
+_gdbm_exec(PyObject *m) {
+    PyObject *d, *s;
 
     if (PyType_Ready(&Dbmtype) < 0)
-            return NULL;
-    m = PyModule_Create(&_gdbmmodule);
-    if (m == NULL)
-        return NULL;
+            return -1;
     d = PyModule_GetDict(m);
     DbmError = PyErr_NewException("_gdbm.error", PyExc_OSError, NULL);
     if (DbmError != NULL) {
@@ -656,5 +640,27 @@ PyInit__gdbm(void) {
         PyDict_SetItemString(d, "open_flags", s);
         Py_DECREF(s);
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _gdbm_slots[] = {
+    {Py_mod_exec, _gdbm_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _gdbmmodule = {
+        PyModuleDef_HEAD_INIT,
+        "_gdbm",
+        gdbmmodule__doc__,
+        0,
+        dbmmodule_methods,
+        _gdbm_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit__gdbm(void) {
+    return PyModuleDef_Init(&_gdbmmodule);
 }
