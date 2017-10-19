@@ -1444,13 +1444,48 @@ static PyMethodDef GcMethods[] = {
     {NULL,      NULL}           /* Sentinel */
 };
 
+static int
+gc_exec(PyObject *m) {
+    if (_PyRuntime.gc.garbage == NULL) {
+        _PyRuntime.gc.garbage = PyList_New(0);
+        if (_PyRuntime.gc.garbage == NULL)
+            return -1;
+    }
+    Py_INCREF(_PyRuntime.gc.garbage);
+    if (PyModule_AddObject(m, "garbage", _PyRuntime.gc.garbage) < 0)
+        return -1;
+
+    if (_PyRuntime.gc.callbacks == NULL) {
+        _PyRuntime.gc.callbacks = PyList_New(0);
+        if (_PyRuntime.gc.callbacks == NULL)
+            return -1;
+    }
+    Py_INCREF(_PyRuntime.gc.callbacks);
+    if (PyModule_AddObject(m, "callbacks", _PyRuntime.gc.callbacks) < 0)
+        return -1;
+
+#define ADD_INT(NAME) if (PyModule_AddIntConstant(m, #NAME, NAME) < 0) return -1
+    ADD_INT(DEBUG_STATS);
+    ADD_INT(DEBUG_COLLECTABLE);
+    ADD_INT(DEBUG_UNCOLLECTABLE);
+    ADD_INT(DEBUG_SAVEALL);
+    ADD_INT(DEBUG_LEAK);
+#undef ADD_INT
+    return 0;
+}
+
+static PyModuleDef_Slot gc_slots[] = {
+    {Py_mod_exec, gc_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef gcmodule = {
     PyModuleDef_HEAD_INIT,
     "gc",              /* m_name */
     gc__doc__,         /* m_doc */
-    -1,                /* m_size */
+    0,                /* m_size */
     GcMethods,         /* m_methods */
-    NULL,              /* m_reload */
+    gc_slots,              /* m_reload */
     NULL,              /* m_traverse */
     NULL,              /* m_clear */
     NULL               /* m_free */
@@ -1459,39 +1494,7 @@ static struct PyModuleDef gcmodule = {
 PyMODINIT_FUNC
 PyInit_gc(void)
 {
-    PyObject *m;
-
-    m = PyModule_Create(&gcmodule);
-
-    if (m == NULL)
-        return NULL;
-
-    if (_PyRuntime.gc.garbage == NULL) {
-        _PyRuntime.gc.garbage = PyList_New(0);
-        if (_PyRuntime.gc.garbage == NULL)
-            return NULL;
-    }
-    Py_INCREF(_PyRuntime.gc.garbage);
-    if (PyModule_AddObject(m, "garbage", _PyRuntime.gc.garbage) < 0)
-        return NULL;
-
-    if (_PyRuntime.gc.callbacks == NULL) {
-        _PyRuntime.gc.callbacks = PyList_New(0);
-        if (_PyRuntime.gc.callbacks == NULL)
-            return NULL;
-    }
-    Py_INCREF(_PyRuntime.gc.callbacks);
-    if (PyModule_AddObject(m, "callbacks", _PyRuntime.gc.callbacks) < 0)
-        return NULL;
-
-#define ADD_INT(NAME) if (PyModule_AddIntConstant(m, #NAME, NAME) < 0) return NULL
-    ADD_INT(DEBUG_STATS);
-    ADD_INT(DEBUG_COLLECTABLE);
-    ADD_INT(DEBUG_UNCOLLECTABLE);
-    ADD_INT(DEBUG_SAVEALL);
-    ADD_INT(DEBUG_LEAK);
-#undef ADD_INT
-    return m;
+    return PyModuleDef_Init(&gcmodule);
 }
 
 /* API to invoke gc.collect() from C */
