@@ -994,23 +994,9 @@ static struct PyMethodDef EVP_functions[] = {
 
 /* Initialize this module. */
 
-
-static struct PyModuleDef _hashlibmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_hashlib",
-    NULL,
-    -1,
-    EVP_functions,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__hashlib(void)
-{
-    PyObject *m, *openssl_md_meth_names;
+static int
+_hashlib_exec(PyObject *m) {
+    PyObject *openssl_md_meth_names;
 
 #ifndef OPENSSL_VERSION_1_1
     /* Load all digest algorithms and initialize cpuid */
@@ -1025,20 +1011,16 @@ PyInit__hashlib(void)
 
     Py_TYPE(&EVPtype) = &PyType_Type;
     if (PyType_Ready(&EVPtype) < 0)
-        return NULL;
-
-    m = PyModule_Create(&_hashlibmodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     openssl_md_meth_names = generate_hash_name_list();
     if (openssl_md_meth_names == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddObject(m, "openssl_md_meth_names", openssl_md_meth_names)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
 
     Py_INCREF((PyObject *)&EVPtype);
@@ -1051,5 +1033,28 @@ PyInit__hashlib(void)
     INIT_CONSTRUCTOR_CONSTANTS(sha256);
     INIT_CONSTRUCTOR_CONSTANTS(sha384);
     INIT_CONSTRUCTOR_CONSTANTS(sha512);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _hashlib_slots[] = {
+    {Py_mod_exec, _hashlib_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _hashlibmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_hashlib",
+    NULL,
+    0,
+    EVP_functions,
+    _hashlib_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__hashlib(void)
+{
+    return PyModuleDef_Init(&_hashlibmodule);
 }

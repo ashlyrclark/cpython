@@ -221,15 +221,34 @@ users are not explicitly listed as members of the groups they are in\n\
 according to the password database.  Check both databases to get\n\
 complete membership information.)");
 
+static int
+grp_exec(PyObject *m) {
+    PyObject *d;
+    d = PyModule_GetDict(m);
+    if (!initialized) {
+        if (PyStructSequence_InitType2(&StructGrpType,
+                                       &struct_group_type_desc) < 0)
+            return -1;
+    }
+    if (PyDict_SetItemString(d, "struct_group",
+                             (PyObject *)&StructGrpType) < 0)
+        return -1;
+    initialized = 1;
+    return 0;
+}
 
+static PyModuleDef_Slot grp_slots[] = {
+    {Py_mod_exec, grp_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef grpmodule = {
         PyModuleDef_HEAD_INIT,
         "grp",
         grp__doc__,
-        -1,
+        0,
         grp_methods,
-        NULL,
+        grp_slots,
         NULL,
         NULL,
         NULL
@@ -238,19 +257,5 @@ static struct PyModuleDef grpmodule = {
 PyMODINIT_FUNC
 PyInit_grp(void)
 {
-    PyObject *m, *d;
-    m = PyModule_Create(&grpmodule);
-    if (m == NULL)
-        return NULL;
-    d = PyModule_GetDict(m);
-    if (!initialized) {
-        if (PyStructSequence_InitType2(&StructGrpType,
-                                       &struct_group_type_desc) < 0)
-            return NULL;
-    }
-    if (PyDict_SetItemString(d, "struct_group",
-                             (PyObject *)&StructGrpType) < 0)
-        return NULL;
-    initialized = 1;
-    return m;
+    return PyModuleDef_Init(&grpmodule);
 }
