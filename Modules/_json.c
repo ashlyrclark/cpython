@@ -1897,24 +1897,8 @@ static PyMethodDef speedups_methods[] = {
 PyDoc_STRVAR(module_doc,
 "json speedups\n");
 
-static struct PyModuleDef jsonmodule = {
-        PyModuleDef_HEAD_INIT,
-        "_json",
-        module_doc,
-        -1,
-        speedups_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC
-PyInit__json(void)
-{
-    PyObject *m = PyModule_Create(&jsonmodule);
-    if (!m)
-        return NULL;
+static int
+_json_exec(PyObject *m) {
     if (PyType_Ready(&PyScannerType) < 0)
         goto fail;
     if (PyType_Ready(&PyEncoderType) < 0)
@@ -1929,8 +1913,30 @@ PyInit__json(void)
         Py_DECREF((PyObject*)&PyEncoderType);
         goto fail;
     }
-    return m;
+    return 0;
   fail:
-    Py_DECREF(m);
-    return NULL;
+    return -1;
+}
+
+static PyModuleDef_Slot _json_slots[] = {
+    {Py_mod_exec, _json_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef jsonmodule = {
+        PyModuleDef_HEAD_INIT,
+        "_json",
+        module_doc,
+        0,
+        speedups_methods,
+        _json_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit__json(void)
+{
+    return PyModuleDef_Init(&jsonmodule);
 }
