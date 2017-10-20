@@ -619,30 +619,11 @@ static struct PyMethodDef PyLocale_Methods[] = {
   {NULL, NULL}
 };
 
-
-static struct PyModuleDef _localemodule = {
-    PyModuleDef_HEAD_INIT,
-    "_locale",
-    locale__doc__,
-    -1,
-    PyLocale_Methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__locale(void)
-{
-    PyObject *m;
+static int
+_locale_exec(PyObject *m) {
 #ifdef HAVE_LANGINFO_H
     int i;
 #endif
-
-    m = PyModule_Create(&_localemodule);
-    if (m == NULL)
-        return NULL;
 
     PyModule_AddIntMacro(m, LC_CTYPE);
     PyModule_AddIntMacro(m, LC_TIME);
@@ -659,8 +640,7 @@ PyInit__locale(void)
 
     Error = PyErr_NewException("locale.Error", NULL, NULL);
     if (Error == NULL) {
-        Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     PyModule_AddObject(m, "Error", Error);
 
@@ -672,10 +652,32 @@ PyInit__locale(void)
 #endif
 
     if (PyErr_Occurred()) {
-        Py_DECREF(m);
-        return NULL;
+        return -1;
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _locale_slots[] = {
+    {Py_mod_exec, _locale_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _localemodule = {
+    PyModuleDef_HEAD_INIT,
+    "_locale",
+    locale__doc__,
+    0,
+    PyLocale_Methods,
+    _locale_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__locale(void)
+{
+    return PyModuleDef_Init(&_localemodule);
 }
 
 /*
