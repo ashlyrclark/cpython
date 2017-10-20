@@ -4623,24 +4623,9 @@ static PyMethodDef module_methods[] = {
     {NULL,              NULL}           /* sentinel */
 };
 
-
-static struct PyModuleDef itertoolsmodule = {
-    PyModuleDef_HEAD_INIT,
-    "itertools",
-    module_doc,
-    -1,
-    module_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_itertools(void)
-{
+static int
+itertools_exec(PyObject *m) {
     int i;
-    PyObject *m;
     const char *name;
     PyTypeObject *typelist[] = {
         &accumulate_type,
@@ -4667,17 +4652,37 @@ PyInit_itertools(void)
     };
 
     Py_TYPE(&teedataobject_type) = &PyType_Type;
-    m = PyModule_Create(&itertoolsmodule);
-    if (m == NULL)
-        return NULL;
 
     for (i=0 ; typelist[i] != NULL ; i++) {
         if (PyType_Ready(typelist[i]) < 0)
-            return NULL;
+            return -1;
         name = _PyType_Name(typelist[i]);
         Py_INCREF(typelist[i]);
         PyModule_AddObject(m, name, (PyObject *)typelist[i]);
     }
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot itertools_slots[] = {
+    {Py_mod_exec, itertools_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef itertoolsmodule = {
+    PyModuleDef_HEAD_INIT,
+    "itertools",
+    module_doc,
+    0,
+    module_methods,
+    itertools_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_itertools(void)
+{
+    return PyModuleDef_Init(&itertoolsmodule);
 }
