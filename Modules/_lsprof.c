@@ -843,38 +843,21 @@ static PyMethodDef moduleMethods[] = {
     {NULL, NULL}
 };
 
-
-static struct PyModuleDef _lsprofmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_lsprof",
-    "Fast profiler",
-    -1,
-    moduleMethods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__lsprof(void)
-{
-    PyObject *module, *d;
-    module = PyModule_Create(&_lsprofmodule);
-    if (module == NULL)
-        return NULL;
+static int
+_lsprof_exec(PyObject *module) {
+    PyObject *d;
     d = PyModule_GetDict(module);
     if (PyType_Ready(&PyProfiler_Type) < 0)
-        return NULL;
+        return -1;
     PyDict_SetItemString(d, "Profiler", (PyObject *)&PyProfiler_Type);
 
     if (!initialized) {
         if (PyStructSequence_InitType2(&StatsEntryType,
                                        &profiler_entry_desc) < 0)
-            return NULL;
+            return -1;
         if (PyStructSequence_InitType2(&StatsSubEntryType,
                                        &profiler_subentry_desc) < 0)
-            return NULL;
+            return -1;
     }
     Py_INCREF((PyObject*) &StatsEntryType);
     Py_INCREF((PyObject*) &StatsSubEntryType);
@@ -884,5 +867,28 @@ PyInit__lsprof(void)
                        (PyObject*) &StatsSubEntryType);
     empty_tuple = PyTuple_New(0);
     initialized = 1;
-    return module;
+    return 0;
+}
+
+static PyModuleDef_Slot _lsprof_slots[] = {
+    {Py_mod_exec, _lsprof_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _lsprofmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_lsprof",
+    "Fast profiler",
+    0,
+    moduleMethods,
+    _lsprof_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__lsprof(void)
+{
+    return PyModuleDef_Init(&_lsprofmodule);
 }
