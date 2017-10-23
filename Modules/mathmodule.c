@@ -2374,14 +2374,30 @@ PyDoc_STRVAR(module_doc,
 "This module is always available.  It provides access to the\n"
 "mathematical functions defined by the C standard.");
 
+static int
+math_exec(PyObject *m) {
+    PyModule_AddObject(m, "pi", PyFloat_FromDouble(Py_MATH_PI));
+    PyModule_AddObject(m, "e", PyFloat_FromDouble(Py_MATH_E));
+    PyModule_AddObject(m, "tau", PyFloat_FromDouble(Py_MATH_TAU));  /* 2pi */
+    PyModule_AddObject(m, "inf", PyFloat_FromDouble(m_inf()));
+#if !defined(PY_NO_SHORT_FLOAT_REPR) || defined(Py_NAN)
+    PyModule_AddObject(m, "nan", PyFloat_FromDouble(m_nan()));
+#endif
+    return 0;
+}
+
+static PyModuleDef_Slot math_slots[] = {
+    {Py_mod_exec, math_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef mathmodule = {
     PyModuleDef_HEAD_INIT,
     "math",
     module_doc,
-    -1,
+    0,
     math_methods,
-    NULL,
+    math_slots,
     NULL,
     NULL,
     NULL
@@ -2390,20 +2406,5 @@ static struct PyModuleDef mathmodule = {
 PyMODINIT_FUNC
 PyInit_math(void)
 {
-    PyObject *m;
-
-    m = PyModule_Create(&mathmodule);
-    if (m == NULL)
-        goto finally;
-
-    PyModule_AddObject(m, "pi", PyFloat_FromDouble(Py_MATH_PI));
-    PyModule_AddObject(m, "e", PyFloat_FromDouble(Py_MATH_E));
-    PyModule_AddObject(m, "tau", PyFloat_FromDouble(Py_MATH_TAU));  /* 2pi */
-    PyModule_AddObject(m, "inf", PyFloat_FromDouble(m_inf()));
-#if !defined(PY_NO_SHORT_FLOAT_REPR) || defined(Py_NAN)
-    PyModule_AddObject(m, "nan", PyFloat_FromDouble(m_nan()));
-#endif
-
-  finally:
-    return m;
+    return PyModuleDef_Init(&mathmodule);
 }
