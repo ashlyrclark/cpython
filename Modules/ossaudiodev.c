@@ -1046,7 +1046,7 @@ static PyMethodDef ossaudiodev_methods[] = {
 
 
 #define _EXPORT_INT(mod, name) \
-  if (PyModule_AddIntConstant(mod, #name, (long) (name)) == -1) return NULL;
+  if (PyModule_AddIntConstant(mod, #name, (long) (name)) == -1) return -1;
 
 
 static char *control_labels[] = SOUND_DEVICE_LABELS;
@@ -1095,33 +1095,13 @@ error1:
     return -1;
 }
 
-
-static struct PyModuleDef ossaudiodevmodule = {
-        PyModuleDef_HEAD_INIT,
-        "ossaudiodev",
-        NULL,
-        -1,
-        ossaudiodev_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC
-PyInit_ossaudiodev(void)
-{
-    PyObject *m;
-
+static int
+ossaudiodev_exec(PyObject *m) {
     if (PyType_Ready(&OSSAudioType) < 0)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&OSSMixerType) < 0)
-        return NULL;
-
-    m = PyModule_Create(&ossaudiodevmodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     OSSAudioError = PyErr_NewException("ossaudiodev.OSSAudioError",
                                        NULL, NULL);
@@ -1136,7 +1116,7 @@ PyInit_ossaudiodev(void)
     /* Build 'control_labels' and 'control_names' lists and add them
        to the module. */
     if (build_namelists(m) == -1)       /* XXX what to do here? */
-        return NULL;
+        return -1;
 
     /* Expose the audio format numbers -- essential! */
     _EXPORT_INT(m, AFMT_QUERY);
@@ -1308,5 +1288,28 @@ PyInit_ossaudiodev(void)
     _EXPORT_INT(m, SNDCTL_TMR_STOP);
     _EXPORT_INT(m, SNDCTL_TMR_TEMPO);
     _EXPORT_INT(m, SNDCTL_TMR_TIMEBASE);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot ossaudiodev_slots[] = {
+    {Py_mod_exec, ossaudiodev_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef ossaudiodevmodule = {
+        PyModuleDef_HEAD_INIT,
+        "ossaudiodev",
+        NULL,
+        0,
+        ossaudiodev_methods,
+        ossaudiodev_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit_ossaudiodev(void)
+{
+    return PyModuleDef_Init(&ossaudiodevmodule);
 }
