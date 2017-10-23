@@ -58,12 +58,11 @@ opcode_functions[] =  {
     {NULL, NULL, 0, NULL}
 };
 
-
 static struct PyModuleDef opcodemodule = {
     PyModuleDef_HEAD_INIT,
     "_opcode",
     "Opcode support module.",
-    -1,
+    0,
     opcode_functions,
     NULL,
     NULL,
@@ -74,5 +73,5 @@ static struct PyModuleDef opcodemodule = {
 PyMODINIT_FUNC
 PyInit__opcode(void)
 {
-    return PyModule_Create(&opcodemodule);
+    return PyModuleDef_Init(&opcodemodule);
 }
