@@ -13055,20 +13055,6 @@ all_ins(PyObject *m)
     return 0;
 }
 
-
-static struct PyModuleDef posixmodule = {
-    PyModuleDef_HEAD_INIT,
-    MODNAME,
-    posix__doc__,
-    -1,
-    posix_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-
 static const char * const have_functions[] = {
 
 #ifdef HAVE_FACCESSAT
@@ -13198,11 +13184,9 @@ static const char * const have_functions[] = {
     NULL
 };
 
-
-PyMODINIT_FUNC
-INITFUNC(void)
-{
-    PyObject *m, *v;
+static int
+posix_exec(PyObject *m) {
+    PyObject *v;
     PyObject *list;
     const char * const *trace;
 
@@ -13210,22 +13194,18 @@ INITFUNC(void)
     win32_can_symlink = enable_symlink();
 #endif
 
-    m = PyModule_Create(&posixmodule);
-    if (m == NULL)
-        return NULL;
-
     /* Initialize environ dictionary */
     v = convertenviron();
     Py_XINCREF(v);
     if (v == NULL || PyModule_AddObject(m, "environ", v) != 0)
-        return NULL;
+        return -1;
     Py_DECREF(v);
 
     if (all_ins(m))
-        return NULL;
+        return -1;
 
     if (setup_confname_tables(m))
-        return NULL;
+        return -1;
 
     Py_INCREF(PyExc_OSError);
     PyModule_AddObject(m, "error", PyExc_OSError);
@@ -13239,7 +13219,7 @@ INITFUNC(void)
 #if defined(HAVE_WAITID) && !defined(__APPLE__)
         waitid_result_desc.name = MODNAME ".waitid_result";
         if (PyStructSequence_InitType2(&WaitidResultType, &waitid_result_desc) < 0)
-            return NULL;
+            return -1;
 #endif
 
         stat_result_desc.name = "os.stat_result"; /* see issue #19209 */
@@ -13247,14 +13227,14 @@ INITFUNC(void)
         stat_result_desc.fields[8].name = PyStructSequence_UnnamedField;
         stat_result_desc.fields[9].name = PyStructSequence_UnnamedField;
         if (PyStructSequence_InitType2(&StatResultType, &stat_result_desc) < 0)
-            return NULL;
+            return -1;
         structseq_new = StatResultType.tp_new;
         StatResultType.tp_new = statresult_new;
 
         statvfs_result_desc.name = "os.statvfs_result"; /* see issue #19209 */
         if (PyStructSequence_InitType2(&StatVFSResultType,
                                        &statvfs_result_desc) < 0)
-            return NULL;
+            return -1;
 #ifdef NEED_TICKS_PER_SECOND
 #  if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
         ticks_per_second = sysconf(_SC_CLK_TCK);
@@ -13268,20 +13248,20 @@ INITFUNC(void)
 #if defined(HAVE_SCHED_SETPARAM) || defined(HAVE_SCHED_SETSCHEDULER)
         sched_param_desc.name = MODNAME ".sched_param";
         if (PyStructSequence_InitType2(&SchedParamType, &sched_param_desc) < 0)
-            return NULL;
+            return -1;
         SchedParamType.tp_new = os_sched_param;
 #endif
 
         /* initialize TerminalSize_info */
         if (PyStructSequence_InitType2(&TerminalSizeType,
                                        &TerminalSize_desc) < 0)
-            return NULL;
+            return -1;
 
         /* initialize scandir types */
         if (PyType_Ready(&ScandirIteratorType) < 0)
-            return NULL;
+            return -1;
         if (PyType_Ready(&DirEntryType) < 0)
-            return NULL;
+            return -1;
     }
 #if defined(HAVE_WAITID) && !defined(__APPLE__)
     Py_INCREF((PyObject*) &WaitidResultType);
@@ -13300,12 +13280,12 @@ INITFUNC(void)
 
     times_result_desc.name = MODNAME ".times_result";
     if (PyStructSequence_InitType2(&TimesResultType, &times_result_desc) < 0)
-        return NULL;
+        return -1;
     PyModule_AddObject(m, "times_result", (PyObject *)&TimesResultType);
 
     uname_result_desc.name = MODNAME ".uname_result";
     if (PyStructSequence_InitType2(&UnameResultType, &uname_result_desc) < 0)
-        return NULL;
+        return -1;
     PyModule_AddObject(m, "uname_result", (PyObject *)&UnameResultType);
 
 #ifdef __APPLE__
@@ -13322,7 +13302,7 @@ INITFUNC(void)
 #ifdef HAVE_FSTATVFS
     if (fstatvfs == NULL) {
         if (PyObject_DelAttrString(m, "fstatvfs") == -1) {
-            return NULL;
+            return -1;
         }
     }
 #endif /* HAVE_FSTATVFS */
@@ -13330,7 +13310,7 @@ INITFUNC(void)
 #ifdef HAVE_STATVFS
     if (statvfs == NULL) {
         if (PyObject_DelAttrString(m, "statvfs") == -1) {
-            return NULL;
+            return -1;
         }
     }
 #endif /* HAVE_STATVFS */
@@ -13338,7 +13318,7 @@ INITFUNC(void)
 # ifdef HAVE_LCHOWN
     if (lchown == NULL) {
         if (PyObject_DelAttrString(m, "lchown") == -1) {
-            return NULL;
+            return -1;
         }
     }
 #endif /* HAVE_LCHOWN */
@@ -13351,7 +13331,7 @@ INITFUNC(void)
 
     billion = PyLong_FromLong(1000000000);
     if (!billion)
-        return NULL;
+        return -1;
 
     /* suppress "function not used" warnings */
     {
@@ -13369,13 +13349,13 @@ INITFUNC(void)
      */
     list = PyList_New(0);
     if (!list)
-        return NULL;
+        return -1;
     for (trace = have_functions; *trace; trace++) {
         PyObject *unicode = PyUnicode_DecodeASCII(*trace, strlen(*trace), NULL);
         if (!unicode)
-            return NULL;
+            return -1;
         if (PyList_Append(list, unicode))
-            return NULL;
+            return -1;
         Py_DECREF(unicode);
     }
     PyModule_AddObject(m, "_have_functions", list);
@@ -13385,7 +13365,33 @@ INITFUNC(void)
 
     initialized = 1;
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot posix_slots[] = {
+    {Py_mod_exec, posix_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef posixmodule = {
+    PyModuleDef_HEAD_INIT,
+    MODNAME,
+    posix__doc__,
+    0,
+    posix_methods,
+    posix_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+
+
+
+PyMODINIT_FUNC
+INITFUNC(void)
+{
+    return PyModuleDef_Init(&posixmodule);
 }
 
 #ifdef __cplusplus
