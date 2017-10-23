@@ -1404,18 +1404,6 @@ static PyMethodDef module_methods[] = {
     {NULL}
 };
 
-static PyModuleDef _lzmamodule = {
-    PyModuleDef_HEAD_INIT,
-    "_lzma",
-    NULL,
-    -1,
-    module_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-};
-
 /* Some of our constants are more than 32 bits wide, so PyModule_AddIntConstant
    would not work correctly on platforms with 32-bit longs. */
 static int
@@ -1433,18 +1421,11 @@ module_add_int_constant(PyObject *m, const char *name, long long value)
 #define ADD_INT_PREFIX_MACRO(m, macro) \
     module_add_int_constant(m, #macro, LZMA_ ## macro)
 
-PyMODINIT_FUNC
-PyInit__lzma(void)
-{
-    PyObject *m;
-
+static int
+_lzma_exec(PyObject *m) {
     empty_tuple = PyTuple_New(0);
     if (empty_tuple == NULL)
-        return NULL;
-
-    m = PyModule_Create(&_lzmamodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     if (PyModule_AddIntMacro(m, FORMAT_AUTO) == -1 ||
         PyModule_AddIntMacro(m, FORMAT_XZ) == -1 ||
@@ -1474,29 +1455,52 @@ PyInit__lzma(void)
         ADD_INT_PREFIX_MACRO(m, MODE_NORMAL) == -1 ||
         ADD_INT_PREFIX_MACRO(m, PRESET_DEFAULT) == -1 ||
         ADD_INT_PREFIX_MACRO(m, PRESET_EXTREME) == -1)
-        return NULL;
+        return -1;
 
     Error = PyErr_NewExceptionWithDoc(
             "_lzma.LZMAError", "Call to liblzma failed.", NULL, NULL);
     if (Error == NULL)
-        return NULL;
+        return -1;
     Py_INCREF(Error);
     if (PyModule_AddObject(m, "LZMAError", Error) == -1)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&Compressor_type) == -1)
-        return NULL;
+        return -1;
     Py_INCREF(&Compressor_type);
     if (PyModule_AddObject(m, "LZMACompressor",
                            (PyObject *)&Compressor_type) == -1)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&Decompressor_type) == -1)
-        return NULL;
+        return -1;
     Py_INCREF(&Decompressor_type);
     if (PyModule_AddObject(m, "LZMADecompressor",
                            (PyObject *)&Decompressor_type) == -1)
-        return NULL;
+        return -1;
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _lzma_slots[] = {
+    {Py_mod_exec, _lzma_exec},
+    {0, NULL}
+};
+
+static PyModuleDef _lzmamodule = {
+    PyModuleDef_HEAD_INIT,
+    "_lzma",
+    NULL,
+    0,
+    module_methods,
+    _lzma_slots,
+    NULL,
+    NULL,
+    NULL,
+};
+
+PyMODINIT_FUNC
+PyInit__lzma(void)
+{
+    return PyModuleDef_Init(&_lzmamodule);
 }
