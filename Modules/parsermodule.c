@@ -1143,38 +1143,18 @@ static PyMethodDef parser_functions[] =  {
     {NULL, NULL, 0, NULL}
     };
 
-
-
-static struct PyModuleDef parsermodule = {
-        PyModuleDef_HEAD_INIT,
-        "parser",
-        NULL,
-        -1,
-        parser_functions,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC PyInit_parser(void);  /* supply a prototype */
-
-PyMODINIT_FUNC
-PyInit_parser(void)
-{
-    PyObject *module, *copyreg;
+static int
+parser_exec(PyObject *module) {
+    PyObject *copyreg;
 
     if (PyType_Ready(&PyST_Type) < 0)
-        return NULL;
-    module = PyModule_Create(&parsermodule);
-    if (module == NULL)
-        return NULL;
+        return -1;
 
     if (parser_error == 0)
         parser_error = PyErr_NewException("parser.ParserError", NULL, NULL);
 
     if (parser_error == 0)
-        return NULL;
+        return -1;
     /* CAUTION:  The code next used to skip bumping the refcount on
      * parser_error.  That's a disaster if PyInit_parser() gets called more
      * than once.  By incref'ing, we ensure that each module dict that
@@ -1183,7 +1163,7 @@ PyInit_parser(void)
      */
     Py_INCREF(parser_error);
     if (PyModule_AddObject(module, "ParserError", parser_error) != 0)
-        return NULL;
+        return -1;
 
     Py_INCREF(&PyST_Type);
     PyModule_AddObject(module, "STType", (PyObject*)&PyST_Type);
@@ -1223,5 +1203,30 @@ PyInit_parser(void)
         Py_XDECREF(pickler);
         Py_DECREF(copyreg);
     }
-    return module;
+    return 0;
+}
+
+static PyModuleDef_Slot parser_slots[] = {
+    {Py_mod_exec, parser_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef parsermodule = {
+        PyModuleDef_HEAD_INIT,
+        "parser",
+        NULL,
+        0,
+        parser_functions,
+        parser_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC PyInit_parser(void);  /* supply a prototype */
+
+PyMODINIT_FUNC
+PyInit_parser(void)
+{
+    return PyModuleDef_Init(&parsermodule);
 }
