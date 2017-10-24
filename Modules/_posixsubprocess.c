@@ -778,12 +778,12 @@ static struct PyModuleDef _posixsubprocessmodule = {
 	PyModuleDef_HEAD_INIT,
 	"_posixsubprocess",
 	module_doc,
-	-1,  /* No memory is needed. */
+	0,  /* No memory is needed. */
 	module_methods,
 };
 
 PyMODINIT_FUNC
 PyInit__posixsubprocess(void)
 {
-    return PyModule_Create(&_posixsubprocessmodule);
+    return PyModuleDef_Init(&_posixsubprocessmodule);
 }
