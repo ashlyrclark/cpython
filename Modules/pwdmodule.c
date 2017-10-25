@@ -214,13 +214,31 @@ static PyMethodDef pwd_methods[] = {
     {NULL,              NULL}           /* sentinel */
 };
 
+static int
+pwd_exec(PyObject *m) {
+    if (!initialized) {
+        if (PyStructSequence_InitType2(&StructPwdType,
+                                       &struct_pwd_type_desc) < 0)
+            return -1;
+        initialized = 1;
+    }
+    Py_INCREF((PyObject *) &StructPwdType);
+    PyModule_AddObject(m, "struct_passwd", (PyObject *) &StructPwdType);
+    return 0;
+}
+
+static PyModuleDef_Slot pwd_slots[] = {
+    {Py_mod_exec, pwd_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef pwdmodule = {
     PyModuleDef_HEAD_INIT,
     "pwd",
     pwd__doc__,
-    -1,
+    0,
     pwd_methods,
-    NULL,
+    pwd_slots,
     NULL,
     NULL,
     NULL
@@ -230,18 +248,5 @@ static struct PyModuleDef pwdmodule = {
 PyMODINIT_FUNC
 PyInit_pwd(void)
 {
-    PyObject *m;
-    m = PyModule_Create(&pwdmodule);
-    if (m == NULL)
-        return NULL;
-
-    if (!initialized) {
-        if (PyStructSequence_InitType2(&StructPwdType,
-                                       &struct_pwd_type_desc) < 0)
-            return NULL;
-        initialized = 1;
-    }
-    Py_INCREF((PyObject *) &StructPwdType);
-    PyModule_AddObject(m, "struct_passwd", (PyObject *) &StructPwdType);
-    return m;
+    return PyModuleDef_Init(&pwdmodule);
 }
