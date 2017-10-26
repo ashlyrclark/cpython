@@ -1623,22 +1623,9 @@ PyDoc_STRVAR(pyexpat_module_documentation,
 #define MODULE_INITFUNC PyInit_pyexpat
 #endif
 
-static struct PyModuleDef pyexpatmodule = {
-        PyModuleDef_HEAD_INIT,
-        MODULE_NAME,
-        pyexpat_module_documentation,
-        -1,
-        pyexpat_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC
-MODULE_INITFUNC(void)
-{
-    PyObject *m, *d;
+static int
+pyexpat_exec(PyObject *m) {
+    PyObject *d;
     PyObject *errmod_name = PyUnicode_FromString(MODULE_NAME ".errors");
     PyObject *errors_module;
     PyObject *modelmod_name;
@@ -1651,25 +1638,20 @@ MODULE_INITFUNC(void)
     PyObject *capi_object;
 
     if (errmod_name == NULL)
-        return NULL;
+        return -1;
     modelmod_name = PyUnicode_FromString(MODULE_NAME ".model");
     if (modelmod_name == NULL)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&Xmlparsetype) < 0)
-        return NULL;
-
-    /* Create the module and add the functions */
-    m = PyModule_Create(&pyexpatmodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     /* Add some symbolic constants to the module */
     if (ErrorObject == NULL) {
         ErrorObject = PyErr_NewException("xml.parsers.expat.ExpatError",
                                          NULL, NULL);
         if (ErrorObject == NULL)
-            return NULL;
+            return -1;
     }
     Py_INCREF(ErrorObject);
     PyModule_AddObject(m, "error", ErrorObject);
@@ -1695,7 +1677,7 @@ MODULE_INITFUNC(void)
     d = PyModule_GetDict(m);
     if (d == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     errors_module = PyDict_GetItem(d, errmod_name);
     if (errors_module == NULL) {
@@ -1720,7 +1702,7 @@ MODULE_INITFUNC(void)
     if (errors_module == NULL || model_module == NULL) {
         /* Don't core dump later! */
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
 
 #if XML_COMBINED_VERSION > 19505
@@ -1759,24 +1741,24 @@ MODULE_INITFUNC(void)
     if (codes_dict == NULL || rev_codes_dict == NULL) {
         Py_XDECREF(codes_dict);
         Py_XDECREF(rev_codes_dict);
-        return NULL;
+        return -1;
     }
 
 #define MYCONST(name) \
     if (PyModule_AddStringConstant(errors_module, #name,               \
                                    XML_ErrorString(name)) < 0)         \
-        return NULL;                                                   \
+        return -1;                                                   \
     tmpnum = PyLong_FromLong(name);                                    \
-    if (tmpnum == NULL) return NULL;                                   \
+    if (tmpnum == NULL) return -1;                                   \
     res = PyDict_SetItemString(codes_dict,                             \
                                XML_ErrorString(name), tmpnum);         \
-    if (res < 0) return NULL;                                          \
+    if (res < 0) return -1;                                          \
     tmpstr = PyUnicode_FromString(XML_ErrorString(name));              \
-    if (tmpstr == NULL) return NULL;                                   \
+    if (tmpstr == NULL) return -1;                                   \
     res = PyDict_SetItem(rev_codes_dict, tmpnum, tmpstr);              \
     Py_DECREF(tmpstr);                                                 \
     Py_DECREF(tmpnum);                                                 \
-    if (res < 0) return NULL;                                          \
+    if (res < 0) return -1;                                          \
 
     MYCONST(XML_ERROR_NO_MEMORY);
     MYCONST(XML_ERROR_SYNTAX);
@@ -1821,12 +1803,12 @@ MODULE_INITFUNC(void)
     if (PyModule_AddStringConstant(errors_module, "__doc__",
                                    "Constants used to describe "
                                    "error conditions.") < 0)
-        return NULL;
+        return -1;
 
     if (PyModule_AddObject(errors_module, "codes", codes_dict) < 0)
-        return NULL;
+        return -1;
     if (PyModule_AddObject(errors_module, "messages", rev_codes_dict) < 0)
-        return NULL;
+        return -1;
 
 #undef MYCONST
 
@@ -1882,7 +1864,30 @@ MODULE_INITFUNC(void)
     capi_object = PyCapsule_New(&capi, PyExpat_CAPSULE_NAME, NULL);
     if (capi_object)
         PyModule_AddObject(m, "expat_CAPI", capi_object);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot pyexpat_slots[] = {
+    {Py_mod_exec, pyexpat_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef pyexpatmodule = {
+        PyModuleDef_HEAD_INIT,
+        MODULE_NAME,
+        pyexpat_module_documentation,
+        0,
+        pyexpat_methods,
+        pyexpat_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+MODULE_INITFUNC(void)
+{
+    return PyModuleDef_Init(&pyexpatmodule);
 }
 
 static void

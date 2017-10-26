@@ -518,14 +518,27 @@ static PyTypeObject Random_Type = {
 PyDoc_STRVAR(module_doc,
 "Module implements the Mersenne Twister random number generator.");
 
+static int
+_random_exec(PyObject *m) {
+    if (PyType_Ready(&Random_Type) < 0)
+        return -1;
+    Py_INCREF(&Random_Type);
+    PyModule_AddObject(m, "Random", (PyObject *)&Random_Type);
+    return 0;
+}
+
+static PyModuleDef_Slot _random_slots[] = {
+    {Py_mod_exec, _random_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef _randommodule = {
     PyModuleDef_HEAD_INIT,
     "_random",
     module_doc,
-    -1,
+    0,
     NULL,
-    NULL,
+    _random_slots,
     NULL,
     NULL,
     NULL
@@ -534,14 +547,5 @@ static struct PyModuleDef _randommodule = {
 PyMODINIT_FUNC
 PyInit__random(void)
 {
-    PyObject *m;
-
-    if (PyType_Ready(&Random_Type) < 0)
-        return NULL;
-    m = PyModule_Create(&_randommodule);
-    if (m == NULL)
-        return NULL;
-    Py_INCREF(&Random_Type);
-    PyModule_AddObject(m, "Random", (PyObject *)&Random_Type);
-    return m;
+    return PyModuleDef_Init(&_randommodule);
 }
