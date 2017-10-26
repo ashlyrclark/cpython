@@ -209,7 +209,7 @@ error:
     return NULL;
 }
 
-static PyMethodDef mod_methods[] = {
+static PyMethodDef scproxy_methods[] = {
     {
         "_get_proxy_settings",
         (PyCFunction)get_proxy_settings,
@@ -227,19 +227,19 @@ static PyMethodDef mod_methods[] = {
 
 
 
-static struct PyModuleDef mod_module = {
+static struct PyModuleDef scproxy_module = {
     PyModuleDef_HEAD_INIT,
     "_scproxy",
     NULL,
-    -1,
-    mod_methods,
+    0,
+    scproxy_methods,
     NULL,
     NULL,
     NULL,
     NULL
 };
 
-
+1
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -247,7 +247,7 @@ extern "C" {
 PyMODINIT_FUNC
 PyInit__scproxy(void)
 {
-    return PyModule_Create(&mod_module);
+    return PyModuleDef_Init(&scproxy_module);
 }
 
 #ifdef __cplusplus
