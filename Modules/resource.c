@@ -332,28 +332,9 @@ resource_methods[] = {
 
 /* Module initialization */
 
-
-static struct PyModuleDef resourcemodule = {
-    PyModuleDef_HEAD_INIT,
-    "resource",
-    NULL,
-    -1,
-    resource_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_resource(void)
-{
-    PyObject *m, *v;
-
-    /* Create the module and add the functions */
-    m = PyModule_Create(&resourcemodule);
-    if (m == NULL)
-        return NULL;
+static int
+resource_exec(PyObject *m) {
+    PyObject *v;
 
     /* Add some symbolic constants to the module */
     Py_INCREF(PyExc_OSError);
@@ -361,7 +342,7 @@ PyInit_resource(void)
     if (!initialized) {
         if (PyStructSequence_InitType2(&StructRUsageType,
                                        &struct_rusage_desc) < 0)
-            return NULL;
+            return -1;
     }
 
     Py_INCREF(&StructRUsageType);
@@ -483,5 +464,28 @@ PyInit_resource(void)
         PyModule_AddObject(m, "RLIM_INFINITY", v);
     }
     initialized = 1;
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot resource_slots[] = {
+    {Py_mod_exec, resource_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef resourcemodule = {
+    PyModuleDef_HEAD_INIT,
+    "resource",
+    NULL,
+    0,
+    resource_methods,
+    resource_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_resource(void)
+{
+    return PyModuleDef_Init(&resourcemodule);
 }
