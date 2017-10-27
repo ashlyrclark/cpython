@@ -1191,36 +1191,18 @@ ITIMER_PROF -- decrements both when the process is executing and\n\
 A signal handler function is called with two arguments:\n\
 the first is the signal number, the second is the interrupted stack frame.");
 
-static struct PyModuleDef signalmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_signal",
-    module_doc,
-    -1,
-    signal_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__signal(void)
-{
-    PyObject *m, *d, *x;
+static int
+signal_exec(PyObject *m) {
+    PyObject *d, *x;
     int i;
 
     main_thread = PyThread_get_thread_ident();
     main_pid = getpid();
 
-    /* Create the module and add the functions */
-    m = PyModule_Create(&signalmodule);
-    if (m == NULL)
-        return NULL;
-
 #if defined(HAVE_SIGWAITINFO) || defined(HAVE_SIGTIMEDWAIT)
     if (!initialized) {
         if (PyStructSequence_InitType2(&SiginfoType, &struct_siginfo_desc) < 0)
-            return NULL;
+            return -1;
     }
     Py_INCREF((PyObject*) &SiginfoType);
     PyModule_AddObject(m, "struct_siginfo", (PyObject*) &SiginfoType);
@@ -1470,12 +1452,34 @@ PyInit__signal(void)
 #endif
 
     if (PyErr_Occurred()) {
-        Py_DECREF(m);
-        m = NULL;
+        return -1;
     }
 
   finally:
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot signal_slots[] = {
+    {Py_mod_exec, signal_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef signalmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_signal",
+    module_doc,
+    0,
+    signal_methods,
+    signal_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__signal(void)
+{
+    return PyModuleDef_Init(&signalmodule);
 }
 
 static void
