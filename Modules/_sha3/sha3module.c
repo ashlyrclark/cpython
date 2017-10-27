@@ -676,39 +676,17 @@ Return a new SHAKE hash object.");
 SHA3_TYPE(SHAKE128type, "_sha3.shake_128", shake_128__doc__, SHAKE_methods);
 SHA3_TYPE(SHAKE256type, "_sha3.shake_256", shake_256__doc__, SHAKE_methods);
 
-
-/* Initialize this module. */
-static struct PyModuleDef _SHA3module = {
-        PyModuleDef_HEAD_INIT,
-        "_sha3",
-        NULL,
-        -1,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-
-PyMODINIT_FUNC
-PyInit__sha3(void)
-{
-    PyObject *m = NULL;
-
-    if ((m = PyModule_Create(&_SHA3module)) == NULL) {
-        return NULL;
-    }
-
+static int
+SHA3_exec(PyObject *m) {
 #define init_sha3type(name, type)     \
     do {                              \
         Py_TYPE(type) = &PyType_Type; \
         if (PyType_Ready(type) < 0) { \
-            goto error;               \
+            return -1;               \
         }                             \
         Py_INCREF((PyObject *)type);  \
         if (PyModule_AddObject(m, name, (PyObject *)type) < 0) { \
-            goto error;               \
+            return -1;               \
         }                             \
     } while(0)
 
@@ -728,15 +706,37 @@ PyInit__sha3(void)
 #undef init_sha3type
 
     if (PyModule_AddIntConstant(m, "keccakopt", KeccakOpt) < 0) {
-        goto error;
+        return -1;
     }
     if (PyModule_AddStringConstant(m, "implementation",
                                    KeccakP1600_implementation) < 0) {
-        goto error;
+        return -1;
     }
 
-    return m;
-  error:
-    Py_DECREF(m);
-    return NULL;
+    return 0;
+}
+
+static PyModuleDef_Slot SHA3_slots[] = {
+    {Py_mod_exec, SHA3_exec},
+    {0, NULL}
+};
+
+/* Initialize this module. */
+static struct PyModuleDef _SHA3module = {
+        PyModuleDef_HEAD_INIT,
+        "_sha3",
+        NULL,
+        0,
+        NULL,
+        SHA3_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+
+PyMODINIT_FUNC
+PyInit__sha3(void)
+{
+    return PyModuleDef_Init(&_SHA3module);
 }
