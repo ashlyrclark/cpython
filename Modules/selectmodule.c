@@ -2386,30 +2386,8 @@ PyDoc_STRVAR(module_doc,
 *** IMPORTANT NOTICE ***\n\
 On Windows, only sockets are supported; on Unix, all file descriptors.");
 
-
-static struct PyModuleDef selectmodule = {
-    PyModuleDef_HEAD_INIT,
-    "select",
-    module_doc,
-    -1,
-    select_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-
-
-
-PyMODINIT_FUNC
-PyInit_select(void)
-{
-    PyObject *m;
-    m = PyModule_Create(&selectmodule);
-    if (m == NULL)
-        return NULL;
-
+static int
+select_exec(PyObject *m) {
     Py_INCREF(PyExc_OSError);
     PyModule_AddObject(m, "error", PyExc_OSError);
 
@@ -2432,7 +2410,7 @@ PyInit_select(void)
     {
 #endif
         if (PyType_Ready(&poll_Type) < 0)
-            return NULL;
+            return -1;
         PyModule_AddIntMacro(m, POLLIN);
         PyModule_AddIntMacro(m, POLLPRI);
         PyModule_AddIntMacro(m, POLLOUT);
@@ -2464,13 +2442,13 @@ PyInit_select(void)
 
 #ifdef HAVE_SYS_DEVPOLL_H
     if (PyType_Ready(&devpoll_Type) < 0)
-        return NULL;
+        return -1;
 #endif
 
 #ifdef HAVE_EPOLL
     Py_TYPE(&pyEpoll_Type) = &PyType_Type;
     if (PyType_Ready(&pyEpoll_Type) < 0)
-        return NULL;
+        return -1;
 
     Py_INCREF(&pyEpoll_Type);
     PyModule_AddObject(m, "epoll", (PyObject *) &pyEpoll_Type);
@@ -2518,14 +2496,14 @@ PyInit_select(void)
     kqueue_event_Type.tp_new = PyType_GenericNew;
     Py_TYPE(&kqueue_event_Type) = &PyType_Type;
     if(PyType_Ready(&kqueue_event_Type) < 0)
-        return NULL;
+        return -1;
 
     Py_INCREF(&kqueue_event_Type);
     PyModule_AddObject(m, "kevent", (PyObject *)&kqueue_event_Type);
 
     Py_TYPE(&kqueue_queue_Type) = &PyType_Type;
     if(PyType_Ready(&kqueue_queue_Type) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&kqueue_queue_Type);
     PyModule_AddObject(m, "kqueue", (PyObject *)&kqueue_queue_Type);
 
@@ -2604,5 +2582,27 @@ PyInit_select(void)
 #endif
 
 #endif /* HAVE_KQUEUE */
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot select_slots[] = {
+    {Py_mod_exec, select_exec}
+};
+
+static struct PyModuleDef selectmodule = {
+    PyModuleDef_HEAD_INIT,
+    "select",
+    module_doc,
+    0,
+    select_methods,
+    select_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_select(void)
+{
+    return PyModuleDef_Init(&selectmodule);
 }
