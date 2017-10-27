@@ -691,14 +691,34 @@ static struct PyMethodDef SHA_functions[] = {
 
 #define insint(n,v) { PyModule_AddIntConstant(m,n,v); }
 
+static int
+SHA_exec(PyObject *m) {
+    Py_TYPE(&SHA224type) = &PyType_Type;
+    if (PyType_Ready(&SHA224type) < 0)
+        return -1;
+    Py_TYPE(&SHA256type) = &PyType_Type;
+    if (PyType_Ready(&SHA256type) < 0)
+        return -1;
+
+    Py_INCREF((PyObject *)&SHA224type);
+    PyModule_AddObject(m, "SHA224Type", (PyObject *)&SHA224type);
+    Py_INCREF((PyObject *)&SHA256type);
+    PyModule_AddObject(m, "SHA256Type", (PyObject *)&SHA256type);
+    return 0;
+}
+
+static PyModuleDef_Slot SHA_slots[] = {
+    {Py_mod_exec, SHA_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef _sha256module = {
         PyModuleDef_HEAD_INIT,
         "_sha256",
         NULL,
-        -1,
+        0,
         SHA_functions,
-        NULL,
+        SHA_slots,
         NULL,
         NULL,
         NULL
@@ -707,23 +727,5 @@ static struct PyModuleDef _sha256module = {
 PyMODINIT_FUNC
 PyInit__sha256(void)
 {
-    PyObject *m;
-
-    Py_TYPE(&SHA224type) = &PyType_Type;
-    if (PyType_Ready(&SHA224type) < 0)
-        return NULL;
-    Py_TYPE(&SHA256type) = &PyType_Type;
-    if (PyType_Ready(&SHA256type) < 0)
-        return NULL;
-
-    m = PyModule_Create(&_sha256module);
-    if (m == NULL)
-        return NULL;
-
-    Py_INCREF((PyObject *)&SHA224type);
-    PyModule_AddObject(m, "SHA224Type", (PyObject *)&SHA224type);
-    Py_INCREF((PyObject *)&SHA256type);
-    PyModule_AddObject(m, "SHA256Type", (PyObject *)&SHA256type);
-    return m;
-
+    return PyModuleDef_Init(&_sha256module);
 }
