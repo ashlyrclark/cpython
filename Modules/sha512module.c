@@ -756,14 +756,34 @@ static struct PyMethodDef SHA_functions[] = {
 
 #define insint(n,v) { PyModule_AddIntConstant(m,n,v); }
 
+static int
+SHA_exec(PyObject *m) {
+    Py_TYPE(&SHA384type) = &PyType_Type;
+    if (PyType_Ready(&SHA384type) < 0)
+        return -1;
+    Py_TYPE(&SHA512type) = &PyType_Type;
+    if (PyType_Ready(&SHA512type) < 0)
+        return -1;
+
+    Py_INCREF((PyObject *)&SHA384type);
+    PyModule_AddObject(m, "SHA384Type", (PyObject *)&SHA384type);
+    Py_INCREF((PyObject *)&SHA512type);
+    PyModule_AddObject(m, "SHA512Type", (PyObject *)&SHA512type);
+    return 0;
+}
+
+static PyModuleDef_Slot SHA_slots[] = {
+    {Py_mod_exec, SHA_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef _sha512module = {
         PyModuleDef_HEAD_INIT,
         "_sha512",
         NULL,
-        -1,
+        0,
         SHA_functions,
-        NULL,
+        SHA_slots,
         NULL,
         NULL,
         NULL
@@ -772,22 +792,5 @@ static struct PyModuleDef _sha512module = {
 PyMODINIT_FUNC
 PyInit__sha512(void)
 {
-    PyObject *m;
-
-    Py_TYPE(&SHA384type) = &PyType_Type;
-    if (PyType_Ready(&SHA384type) < 0)
-        return NULL;
-    Py_TYPE(&SHA512type) = &PyType_Type;
-    if (PyType_Ready(&SHA512type) < 0)
-        return NULL;
-
-    m = PyModule_Create(&_sha512module);
-    if (m == NULL)
-        return NULL;
-
-    Py_INCREF((PyObject *)&SHA384type);
-    PyModule_AddObject(m, "SHA384Type", (PyObject *)&SHA384type);
-    Py_INCREF((PyObject *)&SHA512type);
-    PyModule_AddObject(m, "SHA512Type", (PyObject *)&SHA512type);
-    return m;
+    return PyModuleDef_Init(&_sha512module);
 }
