@@ -197,15 +197,31 @@ static PyMethodDef spwd_methods[] = {
     {NULL,              NULL}           /* sentinel */
 };
 
+static int
+spwd_exec(PyObject *m) {
+    if (!initialized) {
+        if (PyStructSequence_InitType2(&StructSpwdType,
+                                       &struct_spwd_type_desc) < 0)
+            return -1;
+    }
+    Py_INCREF((PyObject *) &StructSpwdType);
+    PyModule_AddObject(m, "struct_spwd", (PyObject *) &StructSpwdType);
+    initialized = 1;
+    return 0;
+}
 
+static PyModuleDef_Slot spwd_slots[] = {
+    {Py_mod_exec, spwd_exec},
+    {0, NULL}
+};
 
 static struct PyModuleDef spwdmodule = {
     PyModuleDef_HEAD_INIT,
     "spwd",
     spwd__doc__,
-    -1,
+    0,
     spwd_methods,
-    NULL,
+    spwd_slots,
     NULL,
     NULL,
     NULL
@@ -214,17 +230,5 @@ static struct PyModuleDef spwdmodule = {
 PyMODINIT_FUNC
 PyInit_spwd(void)
 {
-    PyObject *m;
-    m=PyModule_Create(&spwdmodule);
-    if (m == NULL)
-        return NULL;
-    if (!initialized) {
-        if (PyStructSequence_InitType2(&StructSpwdType,
-                                       &struct_spwd_type_desc) < 0)
-            return NULL;
-    }
-    Py_INCREF((PyObject *) &StructSpwdType);
-    PyModule_AddObject(m, "struct_spwd", (PyObject *) &StructSpwdType);
-    initialized = 1;
-    return m;
+    return PyModuleDef_Init(&spwdmodule);
 }
