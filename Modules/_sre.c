@@ -2798,32 +2798,16 @@ static PyMethodDef _functions[] = {
     {NULL, NULL}
 };
 
-static struct PyModuleDef sremodule = {
-        PyModuleDef_HEAD_INIT,
-        "_" SRE_MODULE,
-        NULL,
-        -1,
-        _functions,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC PyInit__sre(void)
-{
-    PyObject* m;
+static int
+sre_exec(PyObject *m) {
     PyObject* d;
     PyObject* x;
 
     /* Patch object types */
     if (PyType_Ready(&Pattern_Type) || PyType_Ready(&Match_Type) ||
         PyType_Ready(&Scanner_Type))
-        return NULL;
+        return -1;
 
-    m = PyModule_Create(&sremodule);
-    if (m == NULL)
-        return NULL;
     d = PyModule_GetDict(m);
 
     x = PyLong_FromLong(SRE_MAGIC);
@@ -2855,7 +2839,29 @@ PyMODINIT_FUNC PyInit__sre(void)
         PyDict_SetItemString(d, "copyright", x);
         Py_DECREF(x);
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot sre_slots[] = {
+    {Py_mod_exec, sre_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef sremodule = {
+        PyModuleDef_HEAD_INIT,
+        "_" SRE_MODULE,
+        NULL,
+        0,
+        _functions,
+        sre_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC PyInit__sre(void)
+{
+    return PyModuleDef_Init(&sremodule);
 }
 
 /* vim:ts=4:sw=4:et
