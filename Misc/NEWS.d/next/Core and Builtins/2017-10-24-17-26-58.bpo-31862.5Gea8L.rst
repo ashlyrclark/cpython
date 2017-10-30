@@ -1,1 +1,1 @@
-Port md5 module to PEP 489 multiphase initialization.
+Port _bisect module to PEP 489 multiphase initialization.
