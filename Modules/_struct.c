@@ -2281,34 +2281,14 @@ Whitespace between formats is ignored.\n\
 \n\
 The variable struct.error is an exception raised on errors.\n");
 
-
-static struct PyModuleDef _structmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_struct",
-    module_doc,
-    -1,
-    module_functions,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__struct(void)
-{
-    PyObject *m;
-
-    m = PyModule_Create(&_structmodule);
-    if (m == NULL)
-        return NULL;
-
+static int
+struct_exec(PyObject *m) {
     Py_TYPE(&PyStructType) = &PyType_Type;
     if (PyType_Ready(&PyStructType) < 0)
-        return NULL;
+        return -1;
 
     if (PyType_Ready(&unpackiter_type) < 0)
-        return NULL;
+        return -1;
 
     /* Check endian and swap in faster functions */
     {
@@ -2353,7 +2333,7 @@ PyInit__struct(void)
     if (StructError == NULL) {
         StructError = PyErr_NewException("struct.error", NULL, NULL);
         if (StructError == NULL)
-            return NULL;
+            return -1;
     }
 
     Py_INCREF(StructError);
@@ -2362,5 +2342,28 @@ PyInit__struct(void)
     Py_INCREF((PyObject*)&PyStructType);
     PyModule_AddObject(m, "Struct", (PyObject*)&PyStructType);
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot struct_slots[] = {
+    {Py_mod_exec, struct_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _structmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_struct",
+    module_doc,
+    0,
+    module_functions,
+    struct_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__struct(void)
+{
+    return PyModuleDef_Init(&_structmodule);
 }
