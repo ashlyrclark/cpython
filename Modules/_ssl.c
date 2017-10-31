@@ -5202,20 +5202,6 @@ PyDoc_STRVAR(module_doc,
 "Implementation module for SSL socket operations.  See the socket module\n\
 for documentation.");
 
-
-static struct PyModuleDef _sslmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_ssl",
-    module_doc,
-    -1,
-    PySSL_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-
 static void
 parse_openssl_version(unsigned long libver,
                       unsigned int *major, unsigned int *minor,
@@ -5233,10 +5219,9 @@ parse_openssl_version(unsigned long libver,
     *major = libver & 0xFF;
 }
 
-PyMODINIT_FUNC
-PyInit__ssl(void)
-{
-    PyObject *m, *d, *r, *bases;
+static int
+PySSL_exec(PyObject *m) {
+    PyObject *d, *r, *bases;
     unsigned long libver;
     unsigned int major, minor, fix, patch, status;
     PySocketModule_APIObject *socket_api;
@@ -5244,24 +5229,21 @@ PyInit__ssl(void)
     struct py_ssl_library_code *libcode;
 
     if (PyType_Ready(&PySSLContext_Type) < 0)
-        return NULL;
+        return -1;
     if (PyType_Ready(&PySSLSocket_Type) < 0)
-        return NULL;
+        return -1;
     if (PyType_Ready(&PySSLMemoryBIO_Type) < 0)
-        return NULL;
+        return -1;
     if (PyType_Ready(&PySSLSession_Type) < 0)
-        return NULL;
+        return -1;
 
 
-    m = PyModule_Create(&_sslmodule);
-    if (m == NULL)
-        return NULL;
     d = PyModule_GetDict(m);
 
     /* Load _socket module and its C API */
     socket_api = PySocketModule_ImportModuleAndAPI();
     if (!socket_api)
-        return NULL;
+        return -1;
     PySocketModule = *socket_api;
 
 #ifndef OPENSSL_VERSION_1_1
@@ -5275,7 +5257,7 @@ PyInit__ssl(void)
 #ifdef HAVE_OPENSSL_CRYPTO_LOCK
     /* note that this will start threading if not already started */
     if (!_setup_ssl_threads()) {
-        return NULL;
+        return -1;
     }
 #elif OPENSSL_VERSION_1_1 && defined(OPENSSL_THREADS)
     /* OpenSSL 1.1.0 builtin thread support is enabled */
@@ -5286,12 +5268,12 @@ PyInit__ssl(void)
     sslerror_type_slots[0].pfunc = PyExc_OSError;
     PySSLErrorObject = PyType_FromSpec(&sslerror_type_spec);
     if (PySSLErrorObject == NULL)
-        return NULL;
+        return -1;
 
     /* ssl.CertificateError used to be a subclass of ValueError */
     bases = Py_BuildValue("OO", PySSLErrorObject, PyExc_ValueError);
     if (bases == NULL)
-        return NULL;
+        return -1;
     PySSLCertVerificationErrorObject = PyErr_NewExceptionWithDoc(
         "ssl.SSLCertVerificationError", SSLCertVerificationError_doc,
         bases, NULL);
@@ -5317,7 +5299,7 @@ PyInit__ssl(void)
         || PySSLWantWriteErrorObject == NULL
         || PySSLSyscallErrorObject == NULL
         || PySSLEOFErrorObject == NULL)
-        return NULL;
+        return -1;
     if (PyDict_SetItemString(d, "SSLError", PySSLErrorObject) != 0
         || PyDict_SetItemString(d, "SSLCertVerificationError",
                                 PySSLCertVerificationErrorObject) != 0
@@ -5326,19 +5308,19 @@ PyInit__ssl(void)
         || PyDict_SetItemString(d, "SSLWantWriteError", PySSLWantWriteErrorObject) != 0
         || PyDict_SetItemString(d, "SSLSyscallError", PySSLSyscallErrorObject) != 0
         || PyDict_SetItemString(d, "SSLEOFError", PySSLEOFErrorObject) != 0)
-        return NULL;
+        return -1;
     if (PyDict_SetItemString(d, "_SSLContext",
                              (PyObject *)&PySSLContext_Type) != 0)
-        return NULL;
+        return -1;
     if (PyDict_SetItemString(d, "_SSLSocket",
                              (PyObject *)&PySSLSocket_Type) != 0)
-        return NULL;
+        return -1;
     if (PyDict_SetItemString(d, "MemoryBIO",
                              (PyObject *)&PySSLMemoryBIO_Type) != 0)
-        return NULL;
+        return -1;
     if (PyDict_SetItemString(d, "SSLSession",
                              (PyObject *)&PySSLSession_Type) != 0)
-        return NULL;
+        return -1;
 
     PyModule_AddIntConstant(m, "SSL_ERROR_ZERO_RETURN",
                             PY_SSL_ERROR_ZERO_RETURN);
@@ -5532,45 +5514,45 @@ PyInit__ssl(void)
     err_codes_to_names = PyDict_New();
     err_names_to_codes = PyDict_New();
     if (err_codes_to_names == NULL || err_names_to_codes == NULL)
-        return NULL;
+        return -1;
     errcode = error_codes;
     while (errcode->mnemonic != NULL) {
         PyObject *mnemo, *key;
         mnemo = PyUnicode_FromString(errcode->mnemonic);
         key = Py_BuildValue("ii", errcode->library, errcode->reason);
         if (mnemo == NULL || key == NULL)
-            return NULL;
+            return -1;
         if (PyDict_SetItem(err_codes_to_names, key, mnemo))
-            return NULL;
+            return -1;
         if (PyDict_SetItem(err_names_to_codes, mnemo, key))
-            return NULL;
+            return -1;
         Py_DECREF(key);
         Py_DECREF(mnemo);
         errcode++;
     }
     if (PyModule_AddObject(m, "err_codes_to_names", err_codes_to_names))
-        return NULL;
+        return -1;
     if (PyModule_AddObject(m, "err_names_to_codes", err_names_to_codes))
-        return NULL;
+        return -1;
 
     lib_codes_to_names = PyDict_New();
     if (lib_codes_to_names == NULL)
-        return NULL;
+        return -1;
     libcode = library_codes;
     while (libcode->library != NULL) {
         PyObject *mnemo, *key;
         key = PyLong_FromLong(libcode->code);
         mnemo = PyUnicode_FromString(libcode->library);
         if (key == NULL || mnemo == NULL)
-            return NULL;
+            return -1;
         if (PyDict_SetItem(lib_codes_to_names, key, mnemo))
-            return NULL;
+            return -1;
         Py_DECREF(key);
         Py_DECREF(mnemo);
         libcode++;
     }
     if (PyModule_AddObject(m, "lib_codes_to_names", lib_codes_to_names))
-        return NULL;
+        return -1;
 
     /* OpenSSL version */
     /* SSLeay() gives us the version of the library linked against,
@@ -5579,22 +5561,46 @@ PyInit__ssl(void)
     libver = SSLeay();
     r = PyLong_FromUnsignedLong(libver);
     if (r == NULL)
-        return NULL;
+        return -1;
     if (PyModule_AddObject(m, "OPENSSL_VERSION_NUMBER", r))
-        return NULL;
+        return -1;
     parse_openssl_version(libver, &major, &minor, &fix, &patch, &status);
     r = Py_BuildValue("IIIII", major, minor, fix, patch, status);
     if (r == NULL || PyModule_AddObject(m, "OPENSSL_VERSION_INFO", r))
-        return NULL;
+        return -1;
     r = PyUnicode_FromString(SSLeay_version(SSLEAY_VERSION));
     if (r == NULL || PyModule_AddObject(m, "OPENSSL_VERSION", r))
-        return NULL;
+        return -1;
 
     libver = OPENSSL_VERSION_NUMBER;
     parse_openssl_version(libver, &major, &minor, &fix, &patch, &status);
     r = Py_BuildValue("IIIII", major, minor, fix, patch, status);
     if (r == NULL || PyModule_AddObject(m, "_OPENSSL_API_VERSION", r))
-        return NULL;
+        return -1;
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot PySSL_slots[] = {
+    {Py_mod_exec, PySSL_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _sslmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_ssl",
+    module_doc,
+    0,
+    PySSL_methods,
+    PySSL_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+
+PyMODINIT_FUNC
+PyInit__ssl(void)
+{
+    return PyModuleDef_Init(&_sslmodule);
 }
