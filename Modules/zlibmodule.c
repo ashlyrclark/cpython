@@ -1332,29 +1332,14 @@ PyDoc_STRVAR(zlib_module_documentation,
 "Compressor objects support compress() and flush() methods; decompressor\n"
 "objects support decompress() and flush().");
 
-static struct PyModuleDef zlibmodule = {
-        PyModuleDef_HEAD_INIT,
-        "zlib",
-        zlib_module_documentation,
-        -1,
-        zlib_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
 
-PyMODINIT_FUNC
-PyInit_zlib(void)
-{
-    PyObject *m, *ver;
+static int
+zlib_exec(PyObject *m) {
+    PyObject *ver;
     if (PyType_Ready(&Comptype) < 0)
-            return NULL;
+            return -1;
     if (PyType_Ready(&Decomptype) < 0)
-            return NULL;
-    m = PyModule_Create(&zlibmodule);
-    if (m == NULL)
-        return NULL;
+            return -1;
 
     ZlibError = PyErr_NewException("zlib.error", NULL, NULL);
     if (ZlibError != NULL) {
@@ -1387,5 +1372,28 @@ PyInit_zlib(void)
 
     PyModule_AddStringConstant(m, "__version__", "1.0");
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot zlib_slots[] = {
+    {Py_mod_exec, zlib_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef zlibmodule = {
+        PyModuleDef_HEAD_INIT,
+        "zlib",
+        zlib_module_documentation,
+        0,
+        zlib_methods,
+        zlib_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit_zlib(void)
+{
+    return PyModuleDef_Init(&zlibmodule);
 }

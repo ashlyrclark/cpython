@@ -59,29 +59,11 @@ static PyMethodDef symtable_methods[] = {
     {NULL,              NULL}           /* sentinel */
 };
 
-static struct PyModuleDef symtablemodule = {
-    PyModuleDef_HEAD_INIT,
-    "_symtable",
-    NULL,
-    -1,
-    symtable_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__symtable(void)
-{
-    PyObject *m;
-
+static int
+symtable_exec(PyObject *m) {
     if (PyType_Ready(&PySTEntry_Type) < 0)
-        return NULL;
+        return -1;
 
-    m = PyModule_Create(&symtablemodule);
-    if (m == NULL)
-        return NULL;
     PyModule_AddIntMacro(m, USE);
     PyModule_AddIntMacro(m, DEF_GLOBAL);
     PyModule_AddIntMacro(m, DEF_LOCAL);
@@ -106,8 +88,30 @@ PyInit__symtable(void)
     PyModule_AddIntMacro(m, SCOPE_MASK);
 
     if (PyErr_Occurred()) {
-        Py_DECREF(m);
-        m = 0;
+        return -1;
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot symtable_slots[] = {
+    {Py_mod_exec, symtable_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef symtablemodule = {
+    PyModuleDef_HEAD_INIT,
+    "_symtable",
+    NULL,
+    0,
+    symtable_methods,
+    symtable_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__symtable(void)
+{
+    return PyModuleDef_Init(&symtablemodule);
 }

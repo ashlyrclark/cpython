@@ -929,28 +929,9 @@ static struct constant {
     {NULL, 0}
 };
 
-
-static struct PyModuleDef termiosmodule = {
-    PyModuleDef_HEAD_INIT,
-    "termios",
-    termios__doc__,
-    -1,
-    termios_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_termios(void)
-{
-    PyObject *m;
+static int
+termios_exec(PyObject *m) {
     struct constant *constant = termios_constants;
-
-    m = PyModule_Create(&termiosmodule);
-    if (m == NULL)
-        return NULL;
 
     if (TermiosError == NULL) {
         TermiosError = PyErr_NewException("termios.error", NULL, NULL);
@@ -962,5 +943,28 @@ PyInit_termios(void)
         PyModule_AddIntConstant(m, constant->name, constant->value);
         ++constant;
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot termios_slots[] = {
+    {Py_mod_exec, termios_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef termiosmodule = {
+    PyModuleDef_HEAD_INIT,
+    "termios",
+    termios__doc__,
+    0,
+    termios_methods,
+    termios_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_termios(void)
+{
+    return PyModuleDef_Init(&termiosmodule);
 }

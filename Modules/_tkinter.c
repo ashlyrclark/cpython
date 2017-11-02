@@ -3400,126 +3400,108 @@ DisableEventHook(void)
 #endif
 }
 
-
-static struct PyModuleDef _tkintermodule = {
-    PyModuleDef_HEAD_INIT,
-    "_tkinter",
-    NULL,
-    -1,
-    moduleMethods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__tkinter(void)
-{
-  PyObject *m, *uexe, *cexe, *o;
+static int
+tkinter_exec(PyObject *m) {
+  PyObject *uexe, *cexe, *o;
 
     tcl_lock = PyThread_allocate_lock();
     if (tcl_lock == NULL)
-        return NULL;
-
-    m = PyModule_Create(&_tkintermodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     o = PyErr_NewException("_tkinter.TclError", NULL, NULL);
     if (o == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     Py_INCREF(o);
     if (PyModule_AddObject(m, "TclError", o)) {
         Py_DECREF(o);
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     Tkinter_TclError = o;
 
     if (PyModule_AddIntConstant(m, "READABLE", TCL_READABLE)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "WRITABLE", TCL_WRITABLE)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "EXCEPTION", TCL_EXCEPTION)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "WINDOW_EVENTS", TCL_WINDOW_EVENTS)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "FILE_EVENTS", TCL_FILE_EVENTS)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "TIMER_EVENTS", TCL_TIMER_EVENTS)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "IDLE_EVENTS", TCL_IDLE_EVENTS)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "ALL_EVENTS", TCL_ALL_EVENTS)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddIntConstant(m, "DONT_WAIT", TCL_DONT_WAIT)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddStringConstant(m, "TK_VERSION", TK_VERSION)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     if (PyModule_AddStringConstant(m, "TCL_VERSION", TCL_VERSION)) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
 
     o = PyType_FromSpec(&Tkapp_Type_spec);
     if (o == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     ((PyTypeObject *)o)->tp_new = NULL;
     if (PyModule_AddObject(m, "TkappType", o)) {
         Py_DECREF(o);
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     Tkapp_Type = o;
 
     o = PyType_FromSpec(&Tktt_Type_spec);
     if (o == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     ((PyTypeObject *)o)->tp_new = NULL;
     if (PyModule_AddObject(m, "TkttType", o)) {
         Py_DECREF(o);
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     Tktt_Type = o;
 
     o = PyType_FromSpec(&PyTclObject_Type_spec);
     if (o == NULL) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     ((PyTypeObject *)o)->tp_new = NULL;
     if (PyModule_AddObject(m, "Tcl_Obj", o)) {
         Py_DECREF(o);
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
     PyTclObject_Type = o;
 
@@ -3555,12 +3537,12 @@ PyInit__tkinter(void)
             if (!ret && GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
                 str_path = _get_tcl_lib_path();
                 if (str_path == NULL && PyErr_Occurred()) {
-                    return NULL;
+                    return -1;
                 }
                 if (str_path != NULL) {
                     wcs_path = PyUnicode_AsWideCharString(str_path, NULL);
                     if (wcs_path == NULL) {
-                        return NULL;
+                        return -1;
                     }
                     SetEnvironmentVariableW(L"TCL_LIBRARY", wcs_path);
                     set_var = 1;
@@ -3583,7 +3565,7 @@ PyInit__tkinter(void)
 
     if (PyErr_Occurred()) {
         Py_DECREF(m);
-        return NULL;
+        return -1;
     }
 
 #if 0
@@ -3592,5 +3574,28 @@ PyInit__tkinter(void)
        interpreter and thread state have already been destroyed! */
     Py_AtExit(Tcl_Finalize);
 #endif
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot tkinter_slots[] = {
+    {Py_mod_exec, tkinter_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _tkintermodule = {
+    PyModuleDef_HEAD_INIT,
+    "_tkinter",
+    NULL,
+    0,
+    moduleMethods,
+    tkinter_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__tkinter(void)
+{
+    return PyModuleDef_Init(&_tkintermodule);
 }

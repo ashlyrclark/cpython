@@ -9,7 +9,7 @@ static struct PyModuleDef _testimportmultiple = {
     PyModuleDef_HEAD_INIT,
     "_testimportmultiple",
     "_testimportmultiple doc",
-    -1,
+    0,
     NULL,
     NULL,
     NULL,
@@ -19,14 +19,14 @@ static struct PyModuleDef _testimportmultiple = {
 
 PyMODINIT_FUNC PyInit__testimportmultiple(void)
 {
-    return PyModule_Create(&_testimportmultiple);
+    return PyModuleDef_Init(&_testimportmultiple);
 }
 
 static struct PyModuleDef _foomodule = {
     PyModuleDef_HEAD_INIT,
     "_testimportmultiple_foo",
     "_testimportmultiple_foo doc",
-    -1,
+    0,
     NULL,
     NULL,
     NULL,
@@ -36,14 +36,14 @@ static struct PyModuleDef _foomodule = {
 
 PyMODINIT_FUNC PyInit__testimportmultiple_foo(void)
 {
-    return PyModule_Create(&_foomodule);
+    return PyModuleDef_Init(&_foomodule);
 }
 
 static struct PyModuleDef _barmodule = {
     PyModuleDef_HEAD_INIT,
     "_testimportmultiple_bar",
     "_testimportmultiple_bar doc",
-    -1,
+    0,
     NULL,
     NULL,
     NULL,
@@ -52,6 +52,6 @@ static struct PyModuleDef _barmodule = {
 };
 
 PyMODINIT_FUNC PyInit__testimportmultiple_bar(void){
-    return PyModule_Create(&_barmodule);
+    return PyModuleDef_Init(&_barmodule);
 }
 

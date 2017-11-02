@@ -4938,31 +4938,7 @@ static PyTypeObject awaitType = {
     PyObject_Del,                       /* tp_free */
 };
 
-
-static struct PyModuleDef _testcapimodule = {
-    PyModuleDef_HEAD_INIT,
-    "_testcapi",
-    NULL,
-    -1,
-    TestMethods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-/* Per PEP 489, this module will not be converted to multi-phase initialization
- */
-
-PyMODINIT_FUNC
-PyInit__testcapi(void)
-{
-    PyObject *m;
-
-    m = PyModule_Create(&_testcapimodule);
-    if (m == NULL)
-        return NULL;
-
+static int TestExec(PyObject *m) {
     Py_TYPE(&_HashInheritanceTester_Type)=&PyType_Type;
 
     Py_TYPE(&test_structmembersType)=&PyType_Type;
@@ -4971,12 +4947,12 @@ PyInit__testcapi(void)
        test_capi to automatically call this */
     PyModule_AddObject(m, "_test_structmembersType", (PyObject *)&test_structmembersType);
     if (PyType_Ready(&matmulType) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&matmulType);
     PyModule_AddObject(m, "matmulType", (PyObject *)&matmulType);
 
     if (PyType_Ready(&awaitType) < 0)
-        return NULL;
+        return -1;
     Py_INCREF(&awaitType);
     PyModule_AddObject(m, "awaitType", (PyObject *)&awaitType);
 
@@ -5011,5 +4987,31 @@ PyInit__testcapi(void)
     TestError = PyErr_NewException("_testcapi.error", NULL, NULL);
     Py_INCREF(TestError);
     PyModule_AddObject(m, "error", TestError);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot TestSlots[] = {
+    {Py_mod_exec, TestExec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _testcapimodule = {
+    PyModuleDef_HEAD_INIT,
+    "_testcapi",
+    NULL,
+    0,
+    TestMethods,
+    TestSlots,
+    NULL,
+    NULL,
+    NULL
+};
+
+/* Per PEP 489, this module will not be converted to multi-phase initialization
+ */
+
+PyMODINIT_FUNC
+PyInit__testcapi(void)
+{
+    return PyModuleDef_Init(&_testcapimodule);
 }

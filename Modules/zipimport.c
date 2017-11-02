@@ -1552,13 +1552,52 @@ It is usually not needed to use the zipimport module explicitly; it is\n\
 used by the builtin import mechanism for sys.path items that are paths\n\
 to Zip archives.");
 
+static int
+zipimport_exec(PyObject *mod) {
+    if (PyType_Ready(&ZipImporter_Type) < 0)
+        return -1;
+
+    /* Correct directory separator */
+    zip_searchorder[0].suffix[0] = SEP;
+    zip_searchorder[1].suffix[0] = SEP;
+
+    ZipImportError = PyErr_NewException("zipimport.ZipImportError",
+                                        PyExc_ImportError, NULL);
+    if (ZipImportError == NULL)
+        return -1;
+
+    Py_INCREF(ZipImportError);
+    if (PyModule_AddObject(mod, "ZipImportError",
+                           ZipImportError) < 0)
+        return -1;
+
+    Py_INCREF(&ZipImporter_Type);
+    if (PyModule_AddObject(mod, "zipimporter",
+                           (PyObject *)&ZipImporter_Type) < 0)
+        return -1;
+
+    zip_directory_cache = PyDict_New();
+    if (zip_directory_cache == NULL)
+        return -1;
+    Py_INCREF(zip_directory_cache);
+    if (PyModule_AddObject(mod, "_zip_directory_cache",
+                           zip_directory_cache) < 0)
+        return -1;
+    return 0;
+};
+
+static PyModuleDef_Slot zipimport_slots[] = {
+    {Py_mod_exec, zipimport_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef zipimportmodule = {
     PyModuleDef_HEAD_INIT,
     "zipimport",
     zipimport_doc,
-    -1,
+    0,
     NULL,
-    NULL,
+    zipimport_slots,
     NULL,
     NULL,
     NULL
@@ -1567,40 +1606,5 @@ static struct PyModuleDef zipimportmodule = {
 PyMODINIT_FUNC
 PyInit_zipimport(void)
 {
-    PyObject *mod;
-
-    if (PyType_Ready(&ZipImporter_Type) < 0)
-        return NULL;
-
-    /* Correct directory separator */
-    zip_searchorder[0].suffix[0] = SEP;
-    zip_searchorder[1].suffix[0] = SEP;
-
-    mod = PyModule_Create(&zipimportmodule);
-    if (mod == NULL)
-        return NULL;
-
-    ZipImportError = PyErr_NewException("zipimport.ZipImportError",
-                                        PyExc_ImportError, NULL);
-    if (ZipImportError == NULL)
-        return NULL;
-
-    Py_INCREF(ZipImportError);
-    if (PyModule_AddObject(mod, "ZipImportError",
-                           ZipImportError) < 0)
-        return NULL;
-
-    Py_INCREF(&ZipImporter_Type);
-    if (PyModule_AddObject(mod, "zipimporter",
-                           (PyObject *)&ZipImporter_Type) < 0)
-        return NULL;
-
-    zip_directory_cache = PyDict_New();
-    if (zip_directory_cache == NULL)
-        return NULL;
-    Py_INCREF(zip_directory_cache);
-    if (PyModule_AddObject(mod, "_zip_directory_cache",
-                           zip_directory_cache) < 0)
-        return NULL;
-    return mod;
+    return PyModuleDef_Init(&zipimportmodule);
 }

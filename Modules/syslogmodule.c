@@ -249,29 +249,8 @@ static PyMethodDef syslog_methods[] = {
 
 /* Initialization function for the module */
 
-
-static struct PyModuleDef syslogmodule = {
-    PyModuleDef_HEAD_INIT,
-    "syslog",
-    NULL,
-    -1,
-    syslog_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_syslog(void)
-{
-    PyObject *m;
-
-    /* Create the module and add the functions */
-    m = PyModule_Create(&syslogmodule);
-    if (m == NULL)
-        return NULL;
-
+static int
+syslog_exec(PyObject *m) {
     /* Add some symbolic constants to the module */
 
     /* Priorities */
@@ -336,5 +315,28 @@ PyInit_syslog(void)
     PyModule_AddIntMacro(m, LOG_AUTHPRIV);
 #endif
 
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot syslog_slots[] = {
+    {Py_mod_exec, syslog_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef syslogmodule = {
+    PyModuleDef_HEAD_INIT,
+    "syslog",
+    NULL,
+    0,
+    syslog_methods,
+    syslog_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_syslog(void)
+{
+    return PyModuleDef_Init(&syslogmodule);
 }

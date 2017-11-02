@@ -1365,28 +1365,8 @@ strftime() -- convert time tuple to string according to format specification\n\
 strptime() -- parse string to time tuple according to format specification\n\
 tzset() -- change the local timezone");
 
-
-
-static struct PyModuleDef timemodule = {
-    PyModuleDef_HEAD_INIT,
-    "time",
-    module_doc,
-    -1,
-    time_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_time(void)
-{
-    PyObject *m;
-    m = PyModule_Create(&timemodule);
-    if (m == NULL)
-        return NULL;
-
+static int
+time_exec(PyObject *m) {
     /* Set, or reset, module variables like time.timezone */
     PyInit_timezone(m);
 
@@ -1412,13 +1392,13 @@ PyInit_time(void)
     if (!initialized) {
         if (PyStructSequence_InitType2(&StructTimeType,
                                        &struct_time_type_desc) < 0)
-            return NULL;
+            return -1;
     }
     Py_INCREF(&StructTimeType);
     PyModule_AddIntConstant(m, "_STRUCT_TM_ITEMS", 11);
     PyModule_AddObject(m, "struct_time", (PyObject*) &StructTimeType);
     initialized = 1;
-    return m;
+    return 0;
 }
 
 static PyObject*
@@ -1511,4 +1491,27 @@ pysleep(_PyTime_t secs)
     } while (1);
 
     return 0;
+}
+
+static PyModuleDef_Slot time_slots[] = {
+    {Py_mod_exec, time_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef timemodule = {
+    PyModuleDef_HEAD_INIT,
+    "time",
+    module_doc,
+    0,
+    time_methods,
+    time_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_time(void)
+{
+    return PyModuleDef_Init(&timemodule);
 }

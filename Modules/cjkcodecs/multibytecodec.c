@@ -1878,24 +1878,9 @@ static struct PyMethodDef __methods[] = {
     {NULL, NULL},
 };
 
-
-static struct PyModuleDef _multibytecodecmodule = {
-    PyModuleDef_HEAD_INIT,
-    "_multibytecodec",
-    NULL,
-    -1,
-    __methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit__multibytecodec(void)
-{
+static int
+_multibytecodec_exec(PyObject *m) {
     int i;
-    PyObject *m;
     PyTypeObject *typelist[] = {
         &MultibyteIncrementalEncoder_Type,
         &MultibyteIncrementalDecoder_Type,
@@ -1905,15 +1890,11 @@ PyInit__multibytecodec(void)
     };
 
     if (PyType_Ready(&MultibyteCodec_Type) < 0)
-        return NULL;
-
-    m = PyModule_Create(&_multibytecodecmodule);
-    if (m == NULL)
-        return NULL;
+        return -1;
 
     for (i = 0; typelist[i] != NULL; i++) {
         if (PyType_Ready(typelist[i]) < 0)
-            return NULL;
+            return -1;
         Py_INCREF(typelist[i]);
         PyModule_AddObject(m, typelist[i]->tp_name,
                            (PyObject *)typelist[i]);
@@ -1921,8 +1902,30 @@ PyInit__multibytecodec(void)
 
     if (PyErr_Occurred()) {
         Py_FatalError("can't initialize the _multibytecodec module");
-        Py_DECREF(m);
-        m = NULL;
+        return -1;
     }
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot _multibytecodec_slots[] = {
+    {Py_mod_exec, _multibytecodec_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef _multibytecodecmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_multibytecodec",
+    NULL,
+    0,
+    __methods,
+    _multibytecodec_slots,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit__multibytecodec(void)
+{
+    return PyModuleDef_Init(&_multibytecodecmodule);
 }

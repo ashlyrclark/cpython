@@ -1326,28 +1326,11 @@ this database is based on the UnicodeData.txt file version\n\
 The module uses the same names and symbols as defined by the\n\
 UnicodeData File Format " UNIDATA_VERSION ".");
 
-static struct PyModuleDef unicodedatamodule = {
-        PyModuleDef_HEAD_INIT,
-        "unicodedata",
-        unicodedata_docstring,
-        -1,
-        unicodedata_functions,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
-
-PyMODINIT_FUNC
-PyInit_unicodedata(void)
-{
-    PyObject *m, *v;
+static int
+unicodedata_exec(PyObject *m) {
+    PyObject *v;
 
     Py_TYPE(&UCD_Type) = &PyType_Type;
-
-    m = PyModule_Create(&unicodedatamodule);
-    if (!m)
-        return NULL;
 
     PyModule_AddStringConstant(m, "unidata_version", UNIDATA_VERSION);
     Py_INCREF(&UCD_Type);
@@ -1362,7 +1345,30 @@ PyInit_unicodedata(void)
     v = PyCapsule_New((void *)&hashAPI, PyUnicodeData_CAPSULE_NAME, NULL);
     if (v != NULL)
         PyModule_AddObject(m, "ucnhash_CAPI", v);
-    return m;
+    return 0;
+}
+
+static PyModuleDef_Slot unicodedata_slots[] = {
+    {Py_mod_exec, unicodedata_exec},
+    {0, NULL}
+};
+
+static struct PyModuleDef unicodedatamodule = {
+        PyModuleDef_HEAD_INIT,
+        "unicodedata",
+        unicodedata_docstring,
+        0,
+        unicodedata_functions,
+        unicodedata_slots,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit_unicodedata(void)
+{
+    return PyModuleDef_Init(&unicodedatamodule);
 }
 
 /*

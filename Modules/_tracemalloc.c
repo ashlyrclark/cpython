@@ -1634,27 +1634,31 @@ static PyMethodDef module_methods[] = {
 PyDoc_STRVAR(module_doc,
 "Debug module to trace memory blocks allocated by Python.");
 
+static int
+module_exec(PyObject *m) {
+    if (tracemalloc_init() < 0)
+        return -1;
+
+    return 0;
+}
+
+static PyModuleDef_Slot module_slots[] = {
+    {Py_mod_exec, module_exec}
+};
+
 static struct PyModuleDef module_def = {
     PyModuleDef_HEAD_INIT,
     "_tracemalloc",
     module_doc,
     0, /* non-negative size to be able to unload the module */
     module_methods,
-    NULL,
+    module_slots,
 };
 
 PyMODINIT_FUNC
 PyInit__tracemalloc(void)
 {
-    PyObject *m;
-    m = PyModule_Create(&module_def);
-    if (m == NULL)
-        return NULL;
-
-    if (tracemalloc_init() < 0)
-        return NULL;
-
-    return m;
+    return PyModuleDef_Init(&module_def);
 }
 
 
