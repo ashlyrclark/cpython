@@ -1,1 +1,3 @@
-Port _bisect module to PEP 489 multiphase initialization.
+Port following modules PEP 489 multiphase initialization
+- _bisect
+- binascii
