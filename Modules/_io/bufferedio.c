@@ -1844,7 +1844,7 @@ _io_BufferedWriter___init___impl(buffered *self, PyObject *raw,
 * finalized before the buffered writer wrapping it then any buffered
 * data will be lost.
 */
-void _PyIO_atexit_flush(void)
+void _PyIO_atexit_flush(PyObject *module)
 {
     while (buffer_list_end.next != &buffer_list_end) {
         buffered *buf = buffer_list_end.next;

@@ -766,7 +766,7 @@ PyInit__io(void)
         !(_PyIO_empty_bytes = PyBytes_FromStringAndSize(NULL, 0)))
         goto fail;
 
-    _Py_PyAtExit(_PyIO_atexit_flush);
+    _Py_PyAtExit(m, _PyIO_atexit_flush);
 
     state->initialized = 1;
 

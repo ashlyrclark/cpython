@@ -123,6 +123,9 @@ typedef struct _is {
     PyObject *after_forkers_parent;
     PyObject *after_forkers_child;
 #endif
+    /* AtExit module */
+    void (*pyexitfunc)(PyObject *);
+    PyObject *pyexitmodule;
 } PyInterpreterState;
 #endif
 

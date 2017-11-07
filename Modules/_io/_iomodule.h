@@ -184,4 +184,4 @@ extern PyObject *_PyIO_empty_bytes;
 
 extern PyTypeObject _PyBytesIOBuffer_Type;
 
-extern void _PyIO_atexit_flush(void);
+extern void _PyIO_atexit_flush(PyObject *);
