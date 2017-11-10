@@ -33,8 +33,10 @@ static PyStructSequence_Desc struct_group_type_desc = {
    4,
 };
 
+typedef struct {
+    int initialized;
+} grp_state;
 
-static int initialized;
 static PyTypeObject StructGrpType;
 
 static PyObject *
@@ -224,8 +226,16 @@ complete membership information.)");
 static int
 grp_exec(PyObject *m) {
     PyObject *d;
+    grp_state *m_state;
+
+    m_state = PyModule_GetState(m);
+
+    if (m_state == NULL) {
+        return -1;
+    }
+
     d = PyModule_GetDict(m);
-    if (!initialized) {
+    if (!m_state->initialized) {
         if (PyStructSequence_InitType2(&StructGrpType,
                                        &struct_group_type_desc) < 0)
             return -1;
@@ -233,7 +243,7 @@ grp_exec(PyObject *m) {
     if (PyDict_SetItemString(d, "struct_group",
                              (PyObject *)&StructGrpType) < 0)
         return -1;
-    initialized = 1;
+    m_state->initialized = 1;
     return 0;
 }
 
@@ -246,7 +256,7 @@ static struct PyModuleDef grpmodule = {
         PyModuleDef_HEAD_INIT,
         "grp",
         grp__doc__,
-        0,
+        sizeof(grp_state),
         grp_methods,
         grp_slots,
         NULL,
