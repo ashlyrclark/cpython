@@ -10,7 +10,7 @@ cache:
 
 branches:
   only:
-    - master
+    - atexit_callbacks_travis
     - /^\d\.\d$/
 
 matrix:
