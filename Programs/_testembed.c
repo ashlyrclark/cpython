@@ -202,7 +202,7 @@ static int test_atexit_callbacks(void) {
     PyThreadState *subinterpret = NULL;
     PyThreadState *mainState = NULL;
 
-    Py_Initialize();
+    _testembed_Py_Initialize();
     mainState = PyThreadState_Get();
     if (mainState == NULL) {
         goto error;
