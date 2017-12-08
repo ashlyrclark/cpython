@@ -455,6 +455,10 @@ PyAPI_FUNC(PyObject*) PyType_FromSpecWithBases(PyType_Spec*, PyObject*);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03040000
 PyAPI_FUNC(void*) PyType_GetSlot(PyTypeObject*, int);
 #endif
+#if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03070000
+PyAPI_FUNC(PyObject*) PyType_FromModuleAndSpec(PyObject *, PyType_Spec *, PyObject *);
+#endif
+
 
 #ifndef Py_LIMITED_API
 /* The *real* layout of a type object when allocated on the heap */
@@ -473,6 +477,7 @@ typedef struct _heaptypeobject {
     PyBufferProcs as_buffer;
     PyObject *ht_name, *ht_slots, *ht_qualname;
     struct _dictkeysobject *ht_cached_keys;
+    PyObject *ht_module;
     /* here are optional user slots, followed by the members. */
 } PyHeapTypeObject;
 
@@ -513,6 +518,11 @@ PyAPI_FUNC(void) PyType_Modified(PyTypeObject *);
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(PyObject *) _PyType_GetDocFromInternalDoc(const char *, const char *);
 PyAPI_FUNC(PyObject *) _PyType_GetTextSignatureFromInternalDoc(const char *, const char *);
+#endif
+
+#if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03070000
+/* New in 3.7 */
+PyAPI_FUNC(PyObject *) PyType_GetModule(PyTypeObject *);
 #endif
 
 /* Generic operations on objects */
