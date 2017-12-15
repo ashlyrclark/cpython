@@ -132,7 +132,19 @@ method_get(PyMethodDescrObject *descr, PyObject *obj, PyObject *type)
 
     if (descr_check((PyDescrObject *)descr, obj, &res))
         return res;
-    return PyCFunction_NewEx(descr->d_method, obj, NULL);
+    if (descr->d_method->ml_flags & METH_METHOD) {
+        if (PyType_Check(type)) {
+            return PyCMethod_New(descr->d_method, obj, NULL, descr->d_common.d_type);
+        } else {
+            PyErr_Format(PyExc_TypeError,
+                        "descriptor '%V' needs a type, not '%s', as arg 2",
+                        descr_name((PyDescrObject *)descr),
+                        type->ob_type->tp_name);
+            return NULL;
+        }
+    } else {
+        return PyCFunction_NewEx(descr->d_method, obj, NULL);
+    }
 }
 
 static PyObject *
@@ -246,7 +258,7 @@ methoddescr_call(PyMethodDescrObject *descr, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    result = _PyMethodDef_RawFastCallDict(descr->d_method, self,
+    result = _PyMethodDef_RawFastCallDict(descr->d_method, self, NULL,
                                           &PyTuple_GET_ITEM(args, 1), nargs - 1,
                                           kwargs);
     result = _Py_CheckFunctionResult((PyObject *)descr, result, NULL);
@@ -330,7 +342,7 @@ classmethoddescr_call(PyMethodDescrObject *descr, PyObject *args,
         return NULL;
     }
 
-    result = _PyMethodDef_RawFastCallDict(descr->d_method, self,
+    result = _PyMethodDef_RawFastCallDict(descr->d_method, self, NULL,
                                           &PyTuple_GET_ITEM(args, 1), argc - 1,
                                           kwds);
     result = _Py_CheckFunctionResult((PyObject *)descr, result, NULL);

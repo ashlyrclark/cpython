@@ -443,9 +443,8 @@ _PyFunction_FastCallKeywords(PyObject *func, PyObject *const *stack,
 /* --- PyCFunction call functions --------------------------------- */
 
 PyObject *
-_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
-                             PyObject *const *args, Py_ssize_t nargs,
-                             PyObject *kwargs)
+_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyTypeObject *cls,
+                             PyObject *const *args, Py_ssize_t nargs, PyObject *kwargs)
 {
     /* _PyMethodDef_RawFastCallDict() must not be called with an exception set,
        because it can clear it (directly or indirectly) and so the
@@ -549,6 +548,12 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
         break;
     }
 
+    case METH_METHOD:
+    {
+        result = (*(PyCMethod)meth)(self, cls, *args, NULL);
+        break;
+    }
+
     default:
         PyErr_SetString(PyExc_SystemError,
                         "Bad call flags in _PyMethodDef_RawFastCallDict. "
@@ -577,11 +582,13 @@ _PyCFunction_FastCallDict(PyObject *func,
     PyObject *result;
 
     assert(func != NULL);
-    assert(PyCFunction_Check(func));
+    assert(PyCFunction_Check(func) || PyCMethod_Check(func));
 
     result = _PyMethodDef_RawFastCallDict(((PyCFunctionObject*)func)->m_ml,
                                           PyCFunction_GET_SELF(func),
-                                          args, nargs, kwargs);
+                                          PyCFunction_GET_CLASS(func),
+                                          args, nargs, kwargs
+                                       );
     result = _Py_CheckFunctionResult(func, result, NULL);
     return result;
 }

@@ -4562,7 +4562,11 @@ call_function(PyObject ***pp_stack, Py_ssize_t oparg, PyObject *kwnames)
         if (tstate->use_tracing && tstate->c_profilefunc) {
             // We need to create PyCFunctionObject for tracing.
             PyMethodDescrObject *descr = (PyMethodDescrObject*)func;
-            func = PyCFunction_NewEx(descr->d_method, stack[0], NULL);
+            if (descr->d_method->ml_flags & METH_METHOD) {
+                func = PyCMethod_New(descr->d_method, stack[0], NULL, descr->d_common.d_type);
+            } else {
+                func = PyCFunction_NewEx(descr->d_method, stack[0], NULL);
+            }
             if (func == NULL) {
                 return NULL;
             }
