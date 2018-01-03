@@ -14,8 +14,7 @@ extern "C" {
 PyAPI_DATA(PyTypeObject) PyCFunction_Type;
 PyAPI_DATA(PyTypeObject) PyCMethod_Type;
 
-#define PyCFunction_Check(op) (Py_TYPE(op) == &PyCFunction_Type)
-#define PyCMethod_Check(op) (Py_TYPE(op) == &PyCMethod_Type)
+#define PyCFunction_Check(op) ((Py_TYPE(op) == &PyCFunction_Type) || (PyType_IsSubtype(Py_TYPE(op), &PyCFunction_Type)))
 
 typedef PyObject *(*PyCFunction)(PyObject *, PyObject *);
 typedef PyObject *(*_PyCFunctionFast) (PyObject *, PyObject *const *, Py_ssize_t);
@@ -113,7 +112,8 @@ PyAPI_FUNC(PyObject *) PyCMethod_New(PyMethodDef *, PyObject *,
 #define METH_STACKLESS 0x0000
 #endif
 
-/* METH_METHOD means the function stores an additional reference to the class;
+/* METH_METHOD means the function stores an
+ * additional reference to the class that defines it;
  * both self and class are passed to it.
  * It uses PyCMethodObject instead of PyCFunctionObject.
  * May not be combined with METH_NOARGS, METH_O, METH_CLASS or METH_STATIC.
@@ -133,14 +133,13 @@ typedef struct {
 
 typedef struct {
     PyCFunctionObject func;
-    PyTypeObject *mm_class; /* Passed as 'cls' arg to the C func */
+    PyTypeObject *mm_class; /* Class that defines this method */
 } PyCMethodObject;
 
 
 PyAPI_FUNC(PyObject *) _PyMethodDef_RawFastCallDict(
     PyMethodDef *method,
     PyObject *self,
-    PyTypeObject *cls,
     PyObject *const *args,
     Py_ssize_t nargs,
     PyObject *kwargs);
@@ -148,6 +147,7 @@ PyAPI_FUNC(PyObject *) _PyMethodDef_RawFastCallDict(
 PyAPI_FUNC(PyObject *) _PyMethodDef_RawFastCallKeywords(
     PyMethodDef *method,
     PyObject *self,
+    PyTypeObject *cls,
     PyObject *const *args,
     Py_ssize_t nargs,
     PyObject *kwnames);

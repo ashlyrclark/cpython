@@ -443,8 +443,9 @@ _PyFunction_FastCallKeywords(PyObject *func, PyObject *const *stack,
 /* --- PyCFunction call functions --------------------------------- */
 
 PyObject *
-_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyTypeObject *cls,
-                             PyObject *const *args, Py_ssize_t nargs, PyObject *kwargs)
+_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
+                             PyObject *const *args, Py_ssize_t nargs,
+                             PyObject *kwargs)
 {
     /* _PyMethodDef_RawFastCallDict() must not be called with an exception set,
        because it can clear it (directly or indirectly) and so the
@@ -462,6 +463,10 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyTypeObject *
 
     if (Py_EnterRecursiveCall(" while calling a Python object")) {
         return NULL;
+    }
+    if (flags & METH_METHOD) {
+        PyErr_SetString(PyExc_SystemError,
+                        "builtins cannot implement METH_METHOD");
     }
 
     switch (flags)
@@ -548,11 +553,6 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyTypeObject *
         break;
     }
 
-    case METH_METHOD:
-    {
-        result = (*(PyCMethod)meth)(self, cls, *args, NULL);
-        break;
-    }
 
     default:
         PyErr_SetString(PyExc_SystemError,
@@ -582,20 +582,18 @@ _PyCFunction_FastCallDict(PyObject *func,
     PyObject *result;
 
     assert(func != NULL);
-    assert(PyCFunction_Check(func) || PyCMethod_Check(func));
+    assert(PyCFunction_Check(func));
 
     result = _PyMethodDef_RawFastCallDict(((PyCFunctionObject*)func)->m_ml,
                                           PyCFunction_GET_SELF(func),
-                                          PyCFunction_GET_CLASS(func),
-                                          args, nargs, kwargs
-                                       );
+                                          args, nargs, kwargs);
     result = _Py_CheckFunctionResult(func, result, NULL);
     return result;
 }
 
 
 PyObject *
-_PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self,
+_PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self, PyTypeObject *cls,
                                  PyObject *const *args, Py_ssize_t nargs,
                                  PyObject *kwnames)
 {
@@ -694,13 +692,29 @@ _PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self,
                 kwdict = NULL;
             }
 
-            result = (*(PyCFunctionWithKeywords)meth) (self, argtuple, kwdict);
+            if (flags & METH_METHOD) {
+                result = (*(PyCMethod)meth)(self, cls, argtuple, kwdict);
+            }
+            else {
+                result = (*(PyCFunctionWithKeywords)meth) (self, argtuple, kwdict);
+            }
             Py_XDECREF(kwdict);
         }
         else {
-            result = (*meth) (self, argtuple);
+            if (flags & METH_METHOD) {
+                result = (*(PyCMethod)meth)(self, cls, argtuple, NULL);
+            }
+            else {
+                result = (*meth) (self, argtuple);
+            }
         }
         Py_DECREF(argtuple);
+        break;
+    }
+
+    case METH_METHOD:
+    {
+        result = (*(PyCMethod)meth)(self, cls, NULL, NULL);
         break;
     }
 
@@ -736,6 +750,7 @@ _PyCFunction_FastCallKeywords(PyObject *func,
 
     result = _PyMethodDef_RawFastCallKeywords(((PyCFunctionObject*)func)->m_ml,
                                               PyCFunction_GET_SELF(func),
+                                              PyCFunction_GET_CLASS(func),
                                               args, nargs, kwnames);
     result = _Py_CheckFunctionResult(func, result, NULL);
     return result;
