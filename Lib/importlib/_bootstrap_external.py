@@ -1027,7 +1027,20 @@ class ExtensionFileLoader(FileLoader, _LoaderBasics):
 
     def get_code(self, fullname):
         """Return None as an extension module cannot create a code object."""
-        return None
+        code = r"""if 1:
+            import _imp
+
+            ns = globals()
+            if ns is not locals():
+                raise RuntimeError("Cannot execute extension module"
+                                    "name with separate local namespace".format(
+                                    ns['__name__']))
+            module = _imp.create_dynamic(ns['__spec__'])
+            module.__dict__.update(ns)
+            _imp.exec_dynamic(module)
+            ns.update(module.__dict__)
+        """
+        return code
 
     def get_source(self, fullname):
         """Return None as extension modules have no source code."""

@@ -351,6 +351,31 @@ class CmdLineTest(unittest.TestCase):
             launch_name = _make_launch_script(script_dir, 'launch', 'test_pkg')
             self._check_import_error(launch_name, msg)
 
+    def test_extension(self):
+        code = r"""if 1:
+            import runpy
+            runpy._run_module_as_main('math')
+            print(factorial(5), end='')
+        """
+        expected = b"120"
+        rc, out, err = assert_python_ok('-c', code, *example_args, __isolated=False)
+        self.assertEqual(expected, out)
+
+    def test_extension_module_state(self):
+        code = textwrap.dedent("""\
+            import sys
+            import runpy
+            import _testmultiphase
+            runpy._run_module_as_main('_testmultiphase')
+            store_int(123)
+            _testmultiphase.store_int(456)
+            print(load_int(), _testmultiphase.load_int(), file=sys.stderr)
+        """)
+        rc, out, err = assert_python_ok('-c', code, *example_args, __isolated=False)
+        self.assertEqual(b'This is a test module named __main__.\n', out)
+        self.assertEqual(b'123 456', err)
+
+
     def test_issue8202(self):
         # Make sure package __init__ modules see "-m" in sys.argv0 while
         # searching for the module to execute
