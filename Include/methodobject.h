@@ -140,6 +140,7 @@ typedef struct {
 PyAPI_FUNC(PyObject *) _PyMethodDef_RawFastCallDict(
     PyMethodDef *method,
     PyObject *self,
+    PyTypeObject *cls,
     PyObject *const *args,
     Py_ssize_t nargs,
     PyObject *kwargs);

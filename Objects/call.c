@@ -443,7 +443,7 @@ _PyFunction_FastCallKeywords(PyObject *func, PyObject *const *stack,
 /* --- PyCFunction call functions --------------------------------- */
 
 PyObject *
-_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
+_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyTypeObject *cls,
                              PyObject *const *args, Py_ssize_t nargs,
                              PyObject *kwargs)
 {
@@ -463,10 +463,6 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
 
     if (Py_EnterRecursiveCall(" while calling a Python object")) {
         return NULL;
-    }
-    if (flags & METH_METHOD) {
-        PyErr_SetString(PyExc_SystemError,
-                        "builtins cannot implement METH_METHOD");
     }
 
     switch (flags)
@@ -501,10 +497,19 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
         result = (*meth) (self, args[0]);
         break;
 
+    case METH_VARARGS | METH_METHOD:
+        /* fall through */
+
     case METH_VARARGS:
         if (kwargs != NULL && PyDict_GET_SIZE(kwargs) != 0) {
             goto no_keyword_error;
         }
+        /* fall through */
+
+    case METH_VARARGS | METH_KEYWORDS | METH_METHOD:
+        /* fall through */
+
+    case METH_KEYWORDS | METH_METHOD:
         /* fall through */
 
     case METH_VARARGS | METH_KEYWORDS:
@@ -516,12 +521,28 @@ _PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self,
         }
 
         if (flags & METH_KEYWORDS) {
-            result = (*(PyCFunctionWithKeywords)meth) (self, argstuple, kwargs);
+            if (flags & METH_METHOD) {
+                result = (*(PyCMethod)meth)(self, cls, argstuple, kwargs);
+            }
+            else {
+                result = (*(PyCFunctionWithKeywords)meth) (self, argstuple, kwargs);
+            }
         }
         else {
-            result = (*meth) (self, argstuple);
+            if (flags & METH_METHOD) {
+                result = (*(PyCMethod)meth)(self, cls, argstuple, NULL);
+            }
+            else {
+                result = (*meth) (self, argstuple);
+            }
         }
         Py_DECREF(argstuple);
+        break;
+    }
+
+    case METH_METHOD:
+    {
+        result = (*(PyCMethod)meth)(self, cls, NULL, NULL);
         break;
     }
 
@@ -586,6 +607,7 @@ _PyCFunction_FastCallDict(PyObject *func,
 
     result = _PyMethodDef_RawFastCallDict(((PyCFunctionObject*)func)->m_ml,
                                           PyCFunction_GET_SELF(func),
+                                          PyCFunction_GET_CLASS(func),
                                           args, nargs, kwargs);
     result = _Py_CheckFunctionResult(func, result, NULL);
     return result;
@@ -661,10 +683,19 @@ _PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self, PyTypeObje
         result = ((_PyCFunctionFastWithKeywords)meth) (self, args, nargs, kwnames);
         break;
 
+    case METH_VARARGS | METH_METHOD:
+        /* fall through*/
+
     case METH_VARARGS:
         if (nkwargs) {
             goto no_keyword_error;
         }
+        /* fall through */
+
+    case METH_VARARGS | METH_KEYWORDS | METH_METHOD:
+        /* fall through */
+
+    case METH_KEYWORDS | METH_METHOD:
         /* fall through */
 
     case METH_VARARGS | METH_KEYWORDS:
@@ -765,6 +796,7 @@ cfunction_call_varargs(PyObject *func, PyObject *args, PyObject *kwargs)
 
     PyCFunction meth = PyCFunction_GET_FUNCTION(func);
     PyObject *self = PyCFunction_GET_SELF(func);
+    PyTypeObject *cls = PyCFunction_GET_CLASS(func);
     PyObject *result;
 
     if (PyCFunction_GET_FLAGS(func) & METH_KEYWORDS) {
@@ -772,7 +804,12 @@ cfunction_call_varargs(PyObject *func, PyObject *args, PyObject *kwargs)
             return NULL;
         }
 
-        result = (*(PyCFunctionWithKeywords)meth)(self, args, kwargs);
+        if (PyCFunction_GET_FLAGS(func) & METH_METHOD) {
+            result = (*(PyCMethod)meth)(self, cls, args, kwargs);
+        }
+        else {
+            result  = (*(PyCFunctionWithKeywords)meth)(self, args, kwargs);
+        }
 
         Py_LeaveRecursiveCall();
     }
@@ -787,7 +824,13 @@ cfunction_call_varargs(PyObject *func, PyObject *args, PyObject *kwargs)
             return NULL;
         }
 
-        result = (*meth)(self, args);
+        if (PyCFunction_GET_FLAGS(func) & METH_METHOD) {
+            result = (*(PyCMethod)meth)(self, cls, args, NULL);
+        }
+        else {
+            result = (*meth)(self, args);
+        }
+
 
         Py_LeaveRecursiveCall();
     }

@@ -258,7 +258,7 @@ methoddescr_call(PyMethodDescrObject *descr, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    result = _PyMethodDef_RawFastCallDict(descr->d_method, self,
+    result = _PyMethodDef_RawFastCallDict(descr->d_method, self, NULL,
                                           &PyTuple_GET_ITEM(args, 1), nargs - 1,
                                           kwargs);
     result = _Py_CheckFunctionResult((PyObject *)descr, result, NULL);
@@ -342,7 +342,7 @@ classmethoddescr_call(PyMethodDescrObject *descr, PyObject *args,
         return NULL;
     }
 
-    result = _PyMethodDef_RawFastCallDict(descr->d_method, self,
+    result = _PyMethodDef_RawFastCallDict(descr->d_method, self, NULL,
                                           &PyTuple_GET_ITEM(args, 1), argc - 1,
                                           kwds);
     result = _Py_CheckFunctionResult((PyObject *)descr, result, NULL);
