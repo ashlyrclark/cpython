@@ -526,6 +526,7 @@ PyAPI_FUNC(PyObject *) _PyType_GetTextSignatureFromInternalDoc(const char *, con
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03070000
 /* New in 3.7 */
 PyAPI_FUNC(PyObject *) PyType_GetModule(PyTypeObject *);
+PyAPI_FUNC(PyTypeObject *) PyType_DefiningTypeFromSlotFunc(PyTypeObject *, int, void *);
 #endif
 
 /* Generic operations on objects */
