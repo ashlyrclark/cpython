@@ -46,9 +46,13 @@ struct _zipimporter {
     PyObject *files;    /* dict with file info {path: toc_entry} */
 };
 
-static PyObject *ZipImportError;
+static PyObject *ZipImportError = NULL;
+
+typedef struct {
 /* read_directory() cache */
-static PyObject *zip_directory_cache = NULL;
+    PyObject *zip_directory_cache;
+    PyTypeObject *ZipImporter_Type;
+} zipimport_state;
 
 /* forward decls */
 static PyObject *read_directory(PyObject *archive);
@@ -56,15 +60,13 @@ static PyObject *get_data(PyObject *archive, PyObject *toc_entry);
 static PyObject *get_module_code(ZipImporter *self, PyObject *fullname,
                                  int *p_ispackage, PyObject **p_modpath);
 
-static PyTypeObject ZipImporter_Type;
-
-#define ZipImporter_Check(op) PyObject_TypeCheck(op, &ZipImporter_Type)
+#define ZipImporter_Check(op) PyObject_TypeCheck(op, m_state->ZipImporter_Type)
 
 /*[clinic input]
 module zipimport
-class zipimport.zipimporter "ZipImporter *" "&ZipImporter_Type"
+class zipimport.zipimporter "ZipImporter *" "zipimport_state!ZipImporter_Type"
 [clinic start generated code]*/
-/*[clinic end generated code: output=da39a3ee5e6b4b0d input=9db8b61557d911e7]*/
+/*[clinic end generated code: output=da39a3ee5e6b4b0d input=80c02c6996ae592d]*/
 #include "clinic/zipimport.c.h"
 
 
@@ -76,6 +78,7 @@ class zipimport.zipimporter "ZipImporter *" "&ZipImporter_Type"
 /*[clinic input]
 zipimport.zipimporter.__init__
 
+    cls: defining_class
     archivepath as path: object(converter="PyUnicode_FSDecoder")
         A path-like object to a zipfile, or to a specific path inside
         a zipfile.
@@ -97,9 +100,19 @@ zipfile targeted.
 [clinic start generated code]*/
 
 static int
-zipimport_zipimporter___init___impl(ZipImporter *self, PyObject *path)
-/*[clinic end generated code: output=141558fefdb46dc8 input=92b9ebeed1f6a704]*/
+zipimport_zipimporter___init___impl(ZipImporter *self, PyTypeObject *cls,
+                                    PyObject *path)
+/*[clinic end generated code: output=63019a60c7d1c864 input=46123573ecfa8b35]*/
 {
+    PyObject *m;
+    zipimport_state *m_state;
+
+    m = PyType_GetModule(cls);
+    if (m == NULL) {
+        return -1;
+    }
+
+    m_state = PyModule_GetState(m);
     PyObject *files, *tmp;
     PyObject *filename = NULL;
     Py_ssize_t len, flen;
@@ -155,12 +168,12 @@ zipimport_zipimporter___init___impl(ZipImporter *self, PyObject *path)
     if (PyUnicode_READY(filename) < 0)
         goto error;
 
-    files = PyDict_GetItem(zip_directory_cache, filename);
+    files = PyDict_GetItem(m_state->zip_directory_cache, filename);
     if (files == NULL) {
         files = read_directory(filename);
         if (files == NULL)
             goto error;
-        if (PyDict_SetItem(zip_directory_cache, filename, files) != 0)
+        if (PyDict_SetItem(m_state->zip_directory_cache, filename, files) != 0)
             goto error;
     }
     else
@@ -836,49 +849,28 @@ static PyMemberDef zipimporter_members[] = {
 
 #define DEFERRED_ADDRESS(ADDR) 0
 
-static PyTypeObject ZipImporter_Type = {
-    PyVarObject_HEAD_INIT(DEFERRED_ADDRESS(&PyType_Type), 0)
-    "zipimport.zipimporter",
-    sizeof(ZipImporter),
-    0,                                          /* tp_itemsize */
-    (destructor)zipimporter_dealloc,            /* tp_dealloc */
-    0,                                          /* tp_print */
-    0,                                          /* tp_getattr */
-    0,                                          /* tp_setattr */
-    0,                                          /* tp_reserved */
-    (reprfunc)zipimporter_repr,                 /* tp_repr */
-    0,                                          /* tp_as_number */
-    0,                                          /* tp_as_sequence */
-    0,                                          /* tp_as_mapping */
-    0,                                          /* tp_hash */
-    0,                                          /* tp_call */
-    0,                                          /* tp_str */
-    PyObject_GenericGetAttr,                    /* tp_getattro */
-    0,                                          /* tp_setattro */
-    0,                                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE |
-        Py_TPFLAGS_HAVE_GC,                     /* tp_flags */
-    zipimport_zipimporter___init____doc__,      /* tp_doc */
-    zipimporter_traverse,                       /* tp_traverse */
-    0,                                          /* tp_clear */
-    0,                                          /* tp_richcompare */
-    0,                                          /* tp_weaklistoffset */
-    0,                                          /* tp_iter */
-    0,                                          /* tp_iternext */
-    zipimporter_methods,                        /* tp_methods */
-    zipimporter_members,                        /* tp_members */
-    0,                                          /* tp_getset */
-    0,                                          /* tp_base */
-    0,                                          /* tp_dict */
-    0,                                          /* tp_descr_get */
-    0,                                          /* tp_descr_set */
-    0,                                          /* tp_dictoffset */
-    (initproc)zipimport_zipimporter___init__,   /* tp_init */
-    PyType_GenericAlloc,                        /* tp_alloc */
-    PyType_GenericNew,                          /* tp_new */
-    PyObject_GC_Del,                            /* tp_free */
+static PyType_Slot ZipImporter_Type_slots[] = {
+    {Py_tp_doc, zipimport_zipimporter___init____doc__},
+    {Py_tp_dealloc, (destructor)zipimporter_dealloc},
+    {Py_tp_repr, (reprfunc)zipimporter_repr},
+    {Py_tp_traverse, zipimporter_traverse},
+    {Py_tp_getattro, PyObject_GenericGetAttr},
+    {Py_tp_methods, zipimporter_methods},
+    {Py_tp_members, zipimporter_members},
+    {Py_tp_init, (initproc)zipimport_zipimporter___init__},
+    {Py_tp_alloc, PyType_GenericAlloc},
+    {Py_tp_new, PyType_GenericNew},
+    {Py_tp_free, PyObject_GC_Del},
+    {0, 0}
 };
 
+static PyType_Spec ZipImporter_Type_spec = {
+    "zipimport.zipimporter",
+    sizeof(ZipImporter),
+    0,
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,
+    ZipImporter_Type_slots
+};
 
 /* implementation */
 
@@ -1610,13 +1602,63 @@ It is usually not needed to use the zipimport module explicitly; it is\n\
 used by the builtin import mechanism for sys.path items that are paths\n\
 to Zip archives.");
 
+static int
+zipimport_exec(PyObject *mod) {
+    PyObject *temp;
+    zipimport_state *m_state;
+
+    m_state = PyModule_GetState(mod);
+    if (m_state == NULL) {
+        return -1;
+    }
+    temp = PyType_FromModuleAndSpec(mod, &ZipImporter_Type_spec, NULL);
+    if (temp == NULL) {
+        return -1;
+    }
+    m_state->ZipImporter_Type = (PyTypeObject *)temp;
+    if (PyModule_AddObject(mod, "zipimporter", temp) != 0) {
+        return -1;
+    }
+
+    /* Correct directory separator */
+    zip_searchorder[0].suffix[0] = SEP;
+    zip_searchorder[1].suffix[0] = SEP;
+
+
+    if (PyErr_PrepareStaticException((PyTypeObject **)&ZipImportError,
+                                        "zipimport.ZipImportError",
+                                        NULL,
+                                        PyExc_ImportError)) {
+        return -1;
+    }
+    if (ZipImportError == NULL)
+        return -1;
+
+    if (PyModule_AddObject(mod, "ZipImportError",
+                           ZipImportError) < 0)
+        return -1;
+
+    m_state->zip_directory_cache = PyDict_New();
+    if (m_state->zip_directory_cache == NULL)
+        return -1;
+    if (PyModule_AddObject(mod, "_zip_directory_cache",
+                           m_state->zip_directory_cache) < 0)
+        return -1;
+    return 0;
+}
+
+static PyModuleDef_Slot zipimport_slots[] = {
+    {Py_mod_exec, zipimport_exec},
+    {0, NULL}
+};
+
 static struct PyModuleDef zipimportmodule = {
     PyModuleDef_HEAD_INIT,
     "zipimport",
     zipimport_doc,
-    -1,
+    0,
     NULL,
-    NULL,
+    zipimport_slots,
     NULL,
     NULL,
     NULL
@@ -1625,40 +1667,5 @@ static struct PyModuleDef zipimportmodule = {
 PyMODINIT_FUNC
 PyInit_zipimport(void)
 {
-    PyObject *mod;
-
-    if (PyType_Ready(&ZipImporter_Type) < 0)
-        return NULL;
-
-    /* Correct directory separator */
-    zip_searchorder[0].suffix[0] = SEP;
-    zip_searchorder[1].suffix[0] = SEP;
-
-    mod = PyModule_Create(&zipimportmodule);
-    if (mod == NULL)
-        return NULL;
-
-    ZipImportError = PyErr_NewException("zipimport.ZipImportError",
-                                        PyExc_ImportError, NULL);
-    if (ZipImportError == NULL)
-        return NULL;
-
-    Py_INCREF(ZipImportError);
-    if (PyModule_AddObject(mod, "ZipImportError",
-                           ZipImportError) < 0)
-        return NULL;
-
-    Py_INCREF(&ZipImporter_Type);
-    if (PyModule_AddObject(mod, "zipimporter",
-                           (PyObject *)&ZipImporter_Type) < 0)
-        return NULL;
-
-    zip_directory_cache = PyDict_New();
-    if (zip_directory_cache == NULL)
-        return NULL;
-    Py_INCREF(zip_directory_cache);
-    if (PyModule_AddObject(mod, "_zip_directory_cache",
-                           zip_directory_cache) < 0)
-        return NULL;
-    return mod;
+    return PyModuleDef_Init(&zipimportmodule);
 }

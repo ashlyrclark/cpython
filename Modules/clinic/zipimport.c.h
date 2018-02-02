@@ -24,7 +24,8 @@ PyDoc_STRVAR(zipimport_zipimporter___init____doc__,
 "zipfile targeted.");
 
 static int
-zipimport_zipimporter___init___impl(ZipImporter *self, PyObject *path);
+zipimport_zipimporter___init___impl(ZipImporter *self, PyTypeObject *cls,
+                                    PyObject *path);
 
 static int
 zipimport_zipimporter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -32,7 +33,15 @@ zipimport_zipimporter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     int return_value = -1;
     PyObject *path;
 
-    if ((Py_TYPE(self) == &ZipImporter_Type) &&
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &zipimport_zipimporter___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
+    if ((Py_TYPE(self) == ((zipimport_state *)PyModule_GetState(PyType_GetModule(cls)))->ZipImporter_Type) &&
         !_PyArg_NoKeywords("zipimporter", kwargs)) {
         goto exit;
     }
@@ -40,7 +49,7 @@ zipimport_zipimporter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
         PyUnicode_FSDecoder, &path)) {
         goto exit;
     }
-    return_value = zipimport_zipimporter___init___impl((ZipImporter *)self, path);
+    return_value = zipimport_zipimporter___init___impl((ZipImporter *)self, cls, path);
 
 exit:
     return return_value;
@@ -322,4 +331,4 @@ zipimport_zipimporter_get_resource_reader(ZipImporter *self, PyObject *arg)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=0b57adfe21373512 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=d13f6e091f714841 input=a9049054013a1b77]*/
