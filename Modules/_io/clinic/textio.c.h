@@ -46,14 +46,14 @@ PyDoc_STRVAR(_io_IncrementalNewlineDecoder_decode__doc__,
 "\n");
 
 #define _IO_INCREMENTALNEWLINEDECODER_DECODE_METHODDEF    \
-    {"decode", (PyCFunction)_io_IncrementalNewlineDecoder_decode, METH_FASTCALL|METH_KEYWORDS, _io_IncrementalNewlineDecoder_decode__doc__},
+    {"decode", (PyCFunction)_io_IncrementalNewlineDecoder_decode, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io_IncrementalNewlineDecoder_decode__doc__},
 
 static PyObject *
 _io_IncrementalNewlineDecoder_decode_impl(nldecoder_object *self,
                                           PyObject *input, int final);
 
 static PyObject *
-_io_IncrementalNewlineDecoder_decode(nldecoder_object *self, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames)
+_io_IncrementalNewlineDecoder_decode(nldecoder_object *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     static const char * const _keywords[] = {"input", "final", NULL};
@@ -61,7 +61,7 @@ _io_IncrementalNewlineDecoder_decode(nldecoder_object *self, PyObject *const *ar
     PyObject *input;
     int final = 0;
 
-    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &input, &final)) {
         goto exit;
     }
@@ -148,10 +148,10 @@ PyDoc_STRVAR(_io_TextIOWrapper___init____doc__,
 "write contains a newline character.");
 
 static int
-_io_TextIOWrapper___init___impl(textio *self, PyObject *buffer,
-                                const char *encoding, PyObject *errors,
-                                const char *newline, int line_buffering,
-                                int write_through);
+_io_TextIOWrapper___init___impl(textio *self, PyTypeObject *cls,
+                                PyObject *buffer, const char *encoding,
+                                PyObject *errors, const char *newline,
+                                int line_buffering, int write_through);
 
 static int
 _io_TextIOWrapper___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -166,11 +166,19 @@ _io_TextIOWrapper___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     int line_buffering = 0;
     int write_through = 0;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_TextIOWrapper___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &buffer, &encoding, &errors, &newline, &line_buffering, &write_through)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper___init___impl((textio *)self, buffer, encoding, errors, newline, line_buffering, write_through);
+    return_value = _io_TextIOWrapper___init___impl((textio *)self, cls, buffer, encoding, errors, newline, line_buffering, write_through);
 
 exit:
     return return_value;
@@ -186,16 +194,17 @@ PyDoc_STRVAR(_io_TextIOWrapper_reconfigure__doc__,
 "This also does an implicit stream flush.");
 
 #define _IO_TEXTIOWRAPPER_RECONFIGURE_METHODDEF    \
-    {"reconfigure", (PyCFunction)_io_TextIOWrapper_reconfigure, METH_FASTCALL|METH_KEYWORDS, _io_TextIOWrapper_reconfigure__doc__},
+    {"reconfigure", (PyCFunction)_io_TextIOWrapper_reconfigure, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io_TextIOWrapper_reconfigure__doc__},
 
 static PyObject *
-_io_TextIOWrapper_reconfigure_impl(textio *self, PyObject *encoding,
-                                   PyObject *errors, PyObject *newline_obj,
+_io_TextIOWrapper_reconfigure_impl(textio *self, PyTypeObject *cls,
+                                   PyObject *encoding, PyObject *errors,
+                                   PyObject *newline_obj,
                                    PyObject *line_buffering_obj,
                                    PyObject *write_through_obj);
 
 static PyObject *
-_io_TextIOWrapper_reconfigure(textio *self, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames)
+_io_TextIOWrapper_reconfigure(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     static const char * const _keywords[] = {"encoding", "errors", "newline", "line_buffering", "write_through", NULL};
@@ -206,11 +215,11 @@ _io_TextIOWrapper_reconfigure(textio *self, PyObject *const *args, Py_ssize_t na
     PyObject *line_buffering_obj = Py_None;
     PyObject *write_through_obj = Py_None;
 
-    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &encoding, &errors, &newline_obj, &line_buffering_obj, &write_through_obj)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper_reconfigure_impl(self, encoding, errors, newline_obj, line_buffering_obj, write_through_obj);
+    return_value = _io_TextIOWrapper_reconfigure_impl(self, cls, encoding, errors, newline_obj, line_buffering_obj, write_through_obj);
 
 exit:
     return return_value;
@@ -239,21 +248,22 @@ PyDoc_STRVAR(_io_TextIOWrapper_write__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_WRITE_METHODDEF    \
-    {"write", (PyCFunction)_io_TextIOWrapper_write, METH_O, _io_TextIOWrapper_write__doc__},
+    {"write", (PyCFunction)_io_TextIOWrapper_write, METH_METHOD|METH_VARARGS, _io_TextIOWrapper_write__doc__},
 
 static PyObject *
-_io_TextIOWrapper_write_impl(textio *self, PyObject *text);
+_io_TextIOWrapper_write_impl(textio *self, PyTypeObject *cls, PyObject *text);
 
 static PyObject *
-_io_TextIOWrapper_write(textio *self, PyObject *arg)
+_io_TextIOWrapper_write(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     PyObject *text;
 
-    if (!PyArg_Parse(arg, "U:write", &text)) {
+    if (!PyArg_ParseTuple(args, "U:write",
+        &text)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper_write_impl(self, text);
+    return_value = _io_TextIOWrapper_write_impl(self, cls, text);
 
 exit:
     return return_value;
@@ -265,22 +275,22 @@ PyDoc_STRVAR(_io_TextIOWrapper_read__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_READ_METHODDEF    \
-    {"read", (PyCFunction)_io_TextIOWrapper_read, METH_FASTCALL, _io_TextIOWrapper_read__doc__},
+    {"read", (PyCFunction)_io_TextIOWrapper_read, METH_METHOD|METH_VARARGS, _io_TextIOWrapper_read__doc__},
 
 static PyObject *
-_io_TextIOWrapper_read_impl(textio *self, Py_ssize_t n);
+_io_TextIOWrapper_read_impl(textio *self, PyTypeObject *cls, Py_ssize_t n);
 
 static PyObject *
-_io_TextIOWrapper_read(textio *self, PyObject *const *args, Py_ssize_t nargs)
+_io_TextIOWrapper_read(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t n = -1;
 
-    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
+    if (!PyArg_ParseTuple(args, "|O&:read",
         _Py_convert_optional_to_ssize_t, &n)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper_read_impl(self, n);
+    return_value = _io_TextIOWrapper_read_impl(self, cls, n);
 
 exit:
     return return_value;
@@ -292,22 +302,23 @@ PyDoc_STRVAR(_io_TextIOWrapper_readline__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_READLINE_METHODDEF    \
-    {"readline", (PyCFunction)_io_TextIOWrapper_readline, METH_FASTCALL, _io_TextIOWrapper_readline__doc__},
+    {"readline", (PyCFunction)_io_TextIOWrapper_readline, METH_METHOD|METH_VARARGS, _io_TextIOWrapper_readline__doc__},
 
 static PyObject *
-_io_TextIOWrapper_readline_impl(textio *self, Py_ssize_t size);
+_io_TextIOWrapper_readline_impl(textio *self, PyTypeObject *cls,
+                                Py_ssize_t size);
 
 static PyObject *
-_io_TextIOWrapper_readline(textio *self, PyObject *const *args, Py_ssize_t nargs)
+_io_TextIOWrapper_readline(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!_PyArg_ParseStack(args, nargs, "|n:readline",
+    if (!PyArg_ParseTuple(args, "|n:readline",
         &size)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper_readline_impl(self, size);
+    return_value = _io_TextIOWrapper_readline_impl(self, cls, size);
 
 exit:
     return return_value;
@@ -319,23 +330,24 @@ PyDoc_STRVAR(_io_TextIOWrapper_seek__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io_TextIOWrapper_seek, METH_FASTCALL, _io_TextIOWrapper_seek__doc__},
+    {"seek", (PyCFunction)_io_TextIOWrapper_seek, METH_METHOD|METH_VARARGS, _io_TextIOWrapper_seek__doc__},
 
 static PyObject *
-_io_TextIOWrapper_seek_impl(textio *self, PyObject *cookieObj, int whence);
+_io_TextIOWrapper_seek_impl(textio *self, PyTypeObject *cls,
+                            PyObject *cookieObj, int whence);
 
 static PyObject *
-_io_TextIOWrapper_seek(textio *self, PyObject *const *args, Py_ssize_t nargs)
+_io_TextIOWrapper_seek(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     PyObject *cookieObj;
     int whence = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, "O|i:seek",
+    if (!PyArg_ParseTuple(args, "O|i:seek",
         &cookieObj, &whence)) {
         goto exit;
     }
-    return_value = _io_TextIOWrapper_seek_impl(self, cookieObj, whence);
+    return_value = _io_TextIOWrapper_seek_impl(self, cls, cookieObj, whence);
 
 exit:
     return return_value;
@@ -347,15 +359,19 @@ PyDoc_STRVAR(_io_TextIOWrapper_tell__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_TELL_METHODDEF    \
-    {"tell", (PyCFunction)_io_TextIOWrapper_tell, METH_NOARGS, _io_TextIOWrapper_tell__doc__},
+    {"tell", (PyCFunction)_io_TextIOWrapper_tell, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io_TextIOWrapper_tell__doc__},
 
 static PyObject *
-_io_TextIOWrapper_tell_impl(textio *self);
+_io_TextIOWrapper_tell_impl(textio *self, PyTypeObject *cls);
 
 static PyObject *
-_io_TextIOWrapper_tell(textio *self, PyObject *Py_UNUSED(ignored))
+_io_TextIOWrapper_tell(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io_TextIOWrapper_tell_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io_TextIOWrapper_tell_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io_TextIOWrapper_truncate__doc__,
@@ -477,15 +493,19 @@ PyDoc_STRVAR(_io_TextIOWrapper_flush__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_FLUSH_METHODDEF    \
-    {"flush", (PyCFunction)_io_TextIOWrapper_flush, METH_NOARGS, _io_TextIOWrapper_flush__doc__},
+    {"flush", (PyCFunction)_io_TextIOWrapper_flush, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io_TextIOWrapper_flush__doc__},
 
 static PyObject *
-_io_TextIOWrapper_flush_impl(textio *self);
+_io_TextIOWrapper_flush_impl(textio *self, PyTypeObject *cls);
 
 static PyObject *
-_io_TextIOWrapper_flush(textio *self, PyObject *Py_UNUSED(ignored))
+_io_TextIOWrapper_flush(textio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io_TextIOWrapper_flush_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io_TextIOWrapper_flush_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io_TextIOWrapper_close__doc__,
@@ -504,4 +524,4 @@ _io_TextIOWrapper_close(textio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_TextIOWrapper_close_impl(self);
 }
-/*[clinic end generated code: output=b5be870b0039d577 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=29b5b80f3529aefc input=a9049054013a1b77]*/

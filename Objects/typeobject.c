@@ -2936,6 +2936,12 @@ PyType_FromModuleAndSpec(PyObject *module, PyType_Spec *spec, PyObject *bases)
         if (slot->slot == Py_tp_base || slot->slot == Py_tp_bases)
             /* Processed above */
             continue;
+        if (slot->slot == Py_no_offsets) {
+            PyType_offsets *poff = (PyType_offsets *)slot->pfunc;
+            type->tp_dictoffset = poff->dict;
+            type->tp_weaklistoffset = poff->weaklist;
+            continue;
+        }
         *(void**)(res_start + slotoffsets[slot->slot]) = slot->pfunc;
 
         /* need to make a copy of the docstring slot, which usually

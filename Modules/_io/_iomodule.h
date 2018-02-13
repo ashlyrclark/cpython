@@ -3,26 +3,26 @@
  */
 
 /* ABCs */
-extern PyTypeObject PyIOBase_Type;
-extern PyTypeObject PyRawIOBase_Type;
-extern PyTypeObject PyBufferedIOBase_Type;
-extern PyTypeObject PyTextIOBase_Type;
+extern PyType_Spec PyIOBase_Type_spec;
+extern PyType_Spec PyRawIOBase_Type_spec;
+extern PyType_Spec PyBufferedIOBase_Type_spec;
+extern PyType_Spec PyTextIOBase_Type_spec;
 
 /* Concrete classes */
-extern PyTypeObject PyFileIO_Type;
-extern PyTypeObject PyBytesIO_Type;
-extern PyTypeObject PyStringIO_Type;
-extern PyTypeObject PyBufferedReader_Type;
-extern PyTypeObject PyBufferedWriter_Type;
-extern PyTypeObject PyBufferedRWPair_Type;
-extern PyTypeObject PyBufferedRandom_Type;
-extern PyTypeObject PyTextIOWrapper_Type;
-extern PyTypeObject PyIncrementalNewlineDecoder_Type;
+extern PyType_Spec PyFileIO_Type_spec;
+extern PyType_Spec PyBytesIO_Type_spec;
+extern PyType_Spec PyStringIO_Type_spec;
+extern PyType_Spec PyBufferedReader_Type_spec;
+extern PyType_Spec PyBufferedWriter_Type_spec;
+extern PyType_Spec PyBufferedRWPair_Type_spec;
+extern PyType_Spec PyBufferedRandom_Type_spec;
+extern PyType_Spec PyTextIOWrapper_Type_spec;
+extern PyType_Spec PyIncrementalNewlineDecoder_Type_spec;
 
 #ifndef Py_LIMITED_API
 #ifdef MS_WINDOWS
-extern PyTypeObject PyWindowsConsoleIO_Type;
-PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type;
+extern PyType_Spec PyWindowsConsoleIO_Type_Spec;
+PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type_Spec;
 #define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), (PyTypeObject*)_PyWindowsConsoleIO_Type))
 #endif /* MS_WINDOWS */
 #endif /* Py_LIMITED_API */
@@ -31,10 +31,20 @@ PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type;
  * with args=NULL, and return a new reference.
  * BUT when args=Py_True is passed, they return a borrowed reference.
  */
-extern PyObject* _PyIOBase_check_readable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_writable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_seekable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_closed(PyObject *self, PyObject *args);
+extern PyObject*
+_PyIOBase_check_readable(PyObject *self, PyTypeObject *cls,
+                         PyObject *args, PyObject *kwargs);
+
+extern PyObject*
+_PyIOBase_check_writable(PyObject *self, PyTypeObject *cls,
+                         PyObject *args, PyObject *kwargs);
+
+extern PyObject*
+_PyIOBase_check_seekable(PyObject *self, PyTypeObject *cls,
+                         PyObject *args, PyObject *kwargs);
+
+extern PyObject*
+_PyIOBase_check_closed(PyObject *self, PyObject *args);
 
 /* Helper for finalization.
    This function will revive an object ready to be deallocated and try to
@@ -142,12 +152,24 @@ typedef struct {
     PyObject *locale_module;
 
     PyObject *unsupported_operation;
+    PyTypeObject *PyIOBase_Type;
+    PyTypeObject *PyRawIOBase_Type;
+    PyTypeObject *PyBufferedIOBase_Type;
+    PyTypeObject *PyTextIOBase_Type;
+    
+    PyTypeObject *PyFileIO_Type;
+    PyTypeObject *PyBytesIO_Type;
+    PyTypeObject *PyStringIO_Type;
+    PyTypeObject *PyBufferedReader_Type;
+    PyTypeObject *PyBufferedWriter_Type;
+    PyTypeObject *PyBufferedRWPair_Type;
+    PyTypeObject *PyBufferedRandom_Type;
+    PyTypeObject *PyTextIOWrapper_Type;
+    PyTypeObject *PyIncrementalNewlineDecoder_Type;
 } _PyIO_State;
 
 #define IO_MOD_STATE(mod) ((_PyIO_State *)PyModule_GetState(mod))
-#define IO_STATE() _PyIO_get_module_state()
 
-extern _PyIO_State *_PyIO_get_module_state(void);
 extern PyObject *_PyIO_get_locale_module(_PyIO_State *);
 
 #ifdef MS_WINDOWS

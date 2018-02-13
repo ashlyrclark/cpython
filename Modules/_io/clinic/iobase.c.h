@@ -70,15 +70,19 @@ PyDoc_STRVAR(_io__IOBase_seekable__doc__,
 "This method may need to do a test seek().");
 
 #define _IO__IOBASE_SEEKABLE_METHODDEF    \
-    {"seekable", (PyCFunction)_io__IOBase_seekable, METH_NOARGS, _io__IOBase_seekable__doc__},
+    {"seekable", (PyCFunction)_io__IOBase_seekable, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__IOBase_seekable__doc__},
 
 static PyObject *
-_io__IOBase_seekable_impl(PyObject *self);
+_io__IOBase_seekable_impl(PyObject *self, PyTypeObject *cls);
 
 static PyObject *
-_io__IOBase_seekable(PyObject *self, PyObject *Py_UNUSED(ignored))
+_io__IOBase_seekable(PyObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__IOBase_seekable_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__IOBase_seekable_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io__IOBase_readable__doc__,
@@ -90,15 +94,19 @@ PyDoc_STRVAR(_io__IOBase_readable__doc__,
 "If False, read() will raise OSError.");
 
 #define _IO__IOBASE_READABLE_METHODDEF    \
-    {"readable", (PyCFunction)_io__IOBase_readable, METH_NOARGS, _io__IOBase_readable__doc__},
+    {"readable", (PyCFunction)_io__IOBase_readable, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__IOBase_readable__doc__},
 
 static PyObject *
-_io__IOBase_readable_impl(PyObject *self);
+_io__IOBase_readable_impl(PyObject *self, PyTypeObject *cls);
 
 static PyObject *
-_io__IOBase_readable(PyObject *self, PyObject *Py_UNUSED(ignored))
+_io__IOBase_readable(PyObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__IOBase_readable_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__IOBase_readable_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io__IOBase_writable__doc__,
@@ -130,15 +138,19 @@ PyDoc_STRVAR(_io__IOBase_fileno__doc__,
 "OSError is raised if the IO object does not use a file descriptor.");
 
 #define _IO__IOBASE_FILENO_METHODDEF    \
-    {"fileno", (PyCFunction)_io__IOBase_fileno, METH_NOARGS, _io__IOBase_fileno__doc__},
+    {"fileno", (PyCFunction)_io__IOBase_fileno, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__IOBase_fileno__doc__},
 
 static PyObject *
-_io__IOBase_fileno_impl(PyObject *self);
+_io__IOBase_fileno_impl(PyObject *self, PyTypeObject *cls);
 
 static PyObject *
-_io__IOBase_fileno(PyObject *self, PyObject *Py_UNUSED(ignored))
+_io__IOBase_fileno(PyObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__IOBase_fileno_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__IOBase_fileno_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io__IOBase_isatty__doc__,
@@ -279,4 +291,4 @@ _io__RawIOBase_readall(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__RawIOBase_readall_impl(self);
 }
-/*[clinic end generated code: output=64989ec3dbf44a7c input=a9049054013a1b77]*/
+/*[clinic end generated code: output=38d395d68a96beb9 input=a9049054013a1b77]*/

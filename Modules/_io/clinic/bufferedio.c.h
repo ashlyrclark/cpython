@@ -74,15 +74,19 @@ PyDoc_STRVAR(_io__BufferedIOBase_detach__doc__,
 "state.");
 
 #define _IO__BUFFEREDIOBASE_DETACH_METHODDEF    \
-    {"detach", (PyCFunction)_io__BufferedIOBase_detach, METH_NOARGS, _io__BufferedIOBase_detach__doc__},
+    {"detach", (PyCFunction)_io__BufferedIOBase_detach, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__BufferedIOBase_detach__doc__},
 
 static PyObject *
-_io__BufferedIOBase_detach_impl(PyObject *self);
+_io__BufferedIOBase_detach_impl(PyObject *self, PyTypeObject *cls);
 
 static PyObject *
-_io__BufferedIOBase_detach(PyObject *self, PyObject *Py_UNUSED(ignored))
+_io__BufferedIOBase_detach(PyObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__BufferedIOBase_detach_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__BufferedIOBase_detach_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io__Buffered_peek__doc__,
@@ -261,23 +265,26 @@ PyDoc_STRVAR(_io__Buffered_seek__doc__,
 "\n");
 
 #define _IO__BUFFERED_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io__Buffered_seek, METH_FASTCALL, _io__Buffered_seek__doc__},
+    {"seek", (PyCFunction)_io__Buffered_seek, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__Buffered_seek__doc__},
 
 static PyObject *
-_io__Buffered_seek_impl(buffered *self, PyObject *targetobj, int whence);
+_io__Buffered_seek_impl(buffered *self, PyTypeObject *cls,
+                        PyObject *targetobj, int whence);
 
 static PyObject *
-_io__Buffered_seek(buffered *self, PyObject *const *args, Py_ssize_t nargs)
+_io__Buffered_seek(buffered *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
+    static const char * const _keywords[] = {"", "", NULL};
+    static _PyArg_Parser _parser = {"O|i:seek", _keywords, 0};
     PyObject *targetobj;
     int whence = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, "O|i:seek",
+    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &targetobj, &whence)) {
         goto exit;
     }
-    return_value = _io__Buffered_seek_impl(self, targetobj, whence);
+    return_value = _io__Buffered_seek_impl(self, cls, targetobj, whence);
 
 exit:
     return return_value;
@@ -318,8 +325,8 @@ PyDoc_STRVAR(_io_BufferedReader___init____doc__,
 "Create a new buffered reader using the given readable raw IO object.");
 
 static int
-_io_BufferedReader___init___impl(buffered *self, PyObject *raw,
-                                 Py_ssize_t buffer_size);
+_io_BufferedReader___init___impl(buffered *self, PyTypeObject *cls,
+                                 PyObject *raw, Py_ssize_t buffer_size);
 
 static int
 _io_BufferedReader___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -334,7 +341,7 @@ _io_BufferedReader___init__(PyObject *self, PyObject *args, PyObject *kwargs)
         &raw, &buffer_size)) {
         goto exit;
     }
-    return_value = _io_BufferedReader___init___impl((buffered *)self, raw, buffer_size);
+    return_value = _io_BufferedReader___init___impl((buffered *)self, cls, raw, buffer_size);
 
 exit:
     return return_value;
@@ -351,8 +358,8 @@ PyDoc_STRVAR(_io_BufferedWriter___init____doc__,
 "DEFAULT_BUFFER_SIZE.");
 
 static int
-_io_BufferedWriter___init___impl(buffered *self, PyObject *raw,
-                                 Py_ssize_t buffer_size);
+_io_BufferedWriter___init___impl(buffered *self, PyTypeObject *cls,
+                                 PyObject *raw, Py_ssize_t buffer_size);
 
 static int
 _io_BufferedWriter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -367,7 +374,7 @@ _io_BufferedWriter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
         &raw, &buffer_size)) {
         goto exit;
     }
-    return_value = _io_BufferedWriter___init___impl((buffered *)self, raw, buffer_size);
+    return_value = _io_BufferedWriter___init___impl((buffered *)self, cls, raw, buffer_size);
 
 exit:
     return return_value;
@@ -419,26 +426,25 @@ PyDoc_STRVAR(_io_BufferedRWPair___init____doc__,
 "DEFAULT_BUFFER_SIZE.");
 
 static int
-_io_BufferedRWPair___init___impl(rwpair *self, PyObject *reader,
-                                 PyObject *writer, Py_ssize_t buffer_size);
+_io_BufferedRWPair___init___impl(rwpair *self, PyTypeObject *cls,
+                                 PyObject *reader, PyObject *writer,
+                                 Py_ssize_t buffer_size);
 
 static int
 _io_BufferedRWPair___init__(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     int return_value = -1;
+    static const char * const _keywords[] = {"", "", "", NULL};
+    static _PyArg_Parser _parser = {"OO|n:BufferedRWPair", _keywords, 0};
     PyObject *reader;
     PyObject *writer;
     Py_ssize_t buffer_size = DEFAULT_BUFFER_SIZE;
 
-    if ((Py_TYPE(self) == &PyBufferedRWPair_Type) &&
-        !_PyArg_NoKeywords("BufferedRWPair", kwargs)) {
-        goto exit;
-    }
-    if (!PyArg_ParseTuple(args, "OO|n:BufferedRWPair",
+    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &reader, &writer, &buffer_size)) {
         goto exit;
     }
-    return_value = _io_BufferedRWPair___init___impl((rwpair *)self, reader, writer, buffer_size);
+    return_value = _io_BufferedRWPair___init___impl((rwpair *)self, cls, reader, writer, buffer_size);
 
 exit:
     return return_value;
@@ -455,8 +461,8 @@ PyDoc_STRVAR(_io_BufferedRandom___init____doc__,
 "defaults to DEFAULT_BUFFER_SIZE.");
 
 static int
-_io_BufferedRandom___init___impl(buffered *self, PyObject *raw,
-                                 Py_ssize_t buffer_size);
+_io_BufferedRandom___init___impl(buffered *self, PyTypeObject *cls,
+                                 PyObject *raw, Py_ssize_t buffer_size);
 
 static int
 _io_BufferedRandom___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -471,9 +477,9 @@ _io_BufferedRandom___init__(PyObject *self, PyObject *args, PyObject *kwargs)
         &raw, &buffer_size)) {
         goto exit;
     }
-    return_value = _io_BufferedRandom___init___impl((buffered *)self, raw, buffer_size);
+    return_value = _io_BufferedRandom___init___impl((buffered *)self, cls, raw, buffer_size);
 
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=9a20dd4eaabb5d58 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=7a2af4964fef7cd5 input=a9049054013a1b77]*/

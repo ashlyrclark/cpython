@@ -13,9 +13,9 @@
 
 /*[clinic input]
 module _io
-class _io.StringIO "stringio *" "&PyStringIO_Type"
+class _io.StringIO "stringio *" "_PyIO_State!PyStringIO_Type"
 [clinic start generated code]*/
-/*[clinic end generated code: output=da39a3ee5e6b4b0d input=c17bc0f42165cd7d]*/
+/*[clinic end generated code: output=da39a3ee5e6b4b0d input=476f5c44a98d18cb]*/
 
 typedef struct {
     PyObject_HEAD
@@ -396,12 +396,32 @@ static PyObject *
 stringio_iternext(stringio *self)
 {
     PyObject *line;
+    PyTypeObject *cls;
+    PyObject *m;
+    _PyIO_State *state;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                                 Py_tp_iternext,
+                                                 &stringio_iternext);
+    if (cls == NULL) {
+        return NULL;
+    }
+
+    m = PyType_GetModule(cls);
+    if (m == NULL) {
+        return NULL;
+    }
+
+    state = IO_MOD_STATE(m);
+    if (state == NULL) {
+        return NULL;
+    }
 
     CHECK_INITIALIZED(self);
     CHECK_CLOSED(self);
     ENSURE_REALIZED(self);
 
-    if (Py_TYPE(self) == &PyStringIO_Type) {
+    if (Py_TYPE(self) == state->PyStringIO_Type) {
         /* Skip method call overhead for speed */
         line = _stringio_readline(self, -1);
     }
@@ -635,6 +655,8 @@ stringio_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 /*[clinic input]
 _io.StringIO.__init__
+
+    cls: defining_class
     initial_value as value: object(c_default="NULL") = ''
     newline as newline_obj: object(c_default="NULL") = '\n'
 
@@ -645,12 +667,24 @@ argument is like the one of TextIOWrapper's constructor.
 [clinic start generated code]*/
 
 static int
-_io_StringIO___init___impl(stringio *self, PyObject *value,
-                           PyObject *newline_obj)
-/*[clinic end generated code: output=a421ea023b22ef4e input=cee2d9181b2577a3]*/
+_io_StringIO___init___impl(stringio *self, PyTypeObject *cls,
+                           PyObject *value, PyObject *newline_obj)
+/*[clinic end generated code: output=692a8d9f2a32b8c4 input=e49a0b3841fd2bb3]*/
 {
     const char *newline = "\n";
     Py_ssize_t value_len;
+    PyObject *m;
+    _PyIO_State *state;
+
+    m = PyType_GetModule(cls);
+    if (m == NULL) {
+        return -1;
+    }
+
+    state = PyModule_GetState(m);
+    if (state == NULL) {
+        return -1;
+    }
 
     /* Parse the newline argument. We only want to allow unicode objects or
        None. */
@@ -714,7 +748,7 @@ _io_StringIO___init___impl(stringio *self, PyObject *value,
 
     if (self->readuniversal) {
         self->decoder = PyObject_CallFunction(
-            (PyObject *)&PyIncrementalNewlineDecoder_Type,
+            (PyObject *)state->PyIncrementalNewlineDecoder_Type,
             "Oi", Py_None, (int) self->readtranslate);
         if (self->decoder == NULL)
             return -1;
@@ -998,44 +1032,31 @@ static PyGetSetDef stringio_getset[] = {
     {NULL}
 };
 
-PyTypeObject PyStringIO_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "_io.StringIO",                            /*tp_name*/
-    sizeof(stringio),                    /*tp_basicsize*/
-    0,                                         /*tp_itemsize*/
-    (destructor)stringio_dealloc,              /*tp_dealloc*/
-    0,                                         /*tp_print*/
-    0,                                         /*tp_getattr*/
-    0,                                         /*tp_setattr*/
-    0,                                         /*tp_reserved*/
-    0,                                         /*tp_repr*/
-    0,                                         /*tp_as_number*/
-    0,                                         /*tp_as_sequence*/
-    0,                                         /*tp_as_mapping*/
-    0,                                         /*tp_hash*/
-    0,                                         /*tp_call*/
-    0,                                         /*tp_str*/
-    0,                                         /*tp_getattro*/
-    0,                                         /*tp_setattro*/
-    0,                                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
-                       | Py_TPFLAGS_HAVE_GC,   /*tp_flags*/
-    _io_StringIO___init____doc__,              /*tp_doc*/
-    (traverseproc)stringio_traverse,           /*tp_traverse*/
-    (inquiry)stringio_clear,                   /*tp_clear*/
-    0,                                         /*tp_richcompare*/
-    offsetof(stringio, weakreflist),            /*tp_weaklistoffset*/
-    0,                                         /*tp_iter*/
-    (iternextfunc)stringio_iternext,           /*tp_iternext*/
-    stringio_methods,                          /*tp_methods*/
-    0,                                         /*tp_members*/
-    stringio_getset,                           /*tp_getset*/
-    0,                                         /*tp_base*/
-    0,                                         /*tp_dict*/
-    0,                                         /*tp_descr_get*/
-    0,                                         /*tp_descr_set*/
-    offsetof(stringio, dict),                  /*tp_dictoffset*/
-    _io_StringIO___init__,                     /*tp_init*/
-    0,                                         /*tp_alloc*/
-    stringio_new,                              /*tp_new*/
+static PyType_offsets stringio_offsets = {
+    .dict = offsetof(stringio, dict),
+    .weaklist = offsetof(stringio, weakreflist)
 };
+
+static PyType_Slot PyStringIO_Type_slots[] = {
+    {Py_tp_dealloc, stringio_dealloc},
+    {Py_tp_doc, _io_StringIO___init____doc__},
+    {Py_tp_traverse, stringio_traverse},
+    {Py_tp_clear, stringio_clear},
+    {Py_tp_iternext, stringio_iternext},
+    {Py_tp_methods, stringio_methods},
+    {Py_tp_getset, stringio_getset},
+    {Py_tp_init, _io_StringIO___init__},
+    {Py_tp_new, stringio_new},
+    {Py_no_offsets, &stringio_offsets},
+    {0, NULL}
+};
+
+PyType_Spec PyStringIO_Type_spec = {
+    "_io.StringIO",
+    sizeof(stringio),
+    0,
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
+                       | Py_TPFLAGS_HAVE_GC,
+    PyStringIO_Type_slots,
+};
+

@@ -436,6 +436,11 @@ typedef struct _typeobject {
 } PyTypeObject;
 #endif
 
+typedef struct {
+    Py_ssize_t dict;
+    Py_ssize_t weaklist;
+} PyType_offsets;
+
 typedef struct{
     int slot;    /* slot id, see below */
     void *pfunc; /* function pointer */

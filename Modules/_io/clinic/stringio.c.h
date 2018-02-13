@@ -211,8 +211,8 @@ PyDoc_STRVAR(_io_StringIO___init____doc__,
 "argument is like the one of TextIOWrapper\'s constructor.");
 
 static int
-_io_StringIO___init___impl(stringio *self, PyObject *value,
-                           PyObject *newline_obj);
+_io_StringIO___init___impl(stringio *self, PyTypeObject *cls,
+                           PyObject *value, PyObject *newline_obj);
 
 static int
 _io_StringIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -223,11 +223,19 @@ _io_StringIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *value = NULL;
     PyObject *newline_obj = NULL;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_StringIO___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &value, &newline_obj)) {
         goto exit;
     }
-    return_value = _io_StringIO___init___impl((stringio *)self, value, newline_obj);
+    return_value = _io_StringIO___init___impl((stringio *)self, cls, value, newline_obj);
 
 exit:
     return return_value;
@@ -286,4 +294,4 @@ _io_StringIO_seekable(stringio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_StringIO_seekable_impl(self);
 }
-/*[clinic end generated code: output=73c4d6e5cc3b1a58 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=ecca7e18e32ce2c0 input=a9049054013a1b77]*/

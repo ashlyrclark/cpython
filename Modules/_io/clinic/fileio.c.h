@@ -12,15 +12,19 @@ PyDoc_STRVAR(_io_FileIO_close__doc__,
 "called more than once without error.");
 
 #define _IO_FILEIO_CLOSE_METHODDEF    \
-    {"close", (PyCFunction)_io_FileIO_close, METH_NOARGS, _io_FileIO_close__doc__},
+    {"close", (PyCFunction)_io_FileIO_close, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io_FileIO_close__doc__},
 
 static PyObject *
-_io_FileIO_close_impl(fileio *self);
+_io_FileIO_close_impl(fileio *self, PyTypeObject *cls);
 
 static PyObject *
-_io_FileIO_close(fileio *self, PyObject *Py_UNUSED(ignored))
+_io_FileIO_close(fileio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io_FileIO_close_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io_FileIO_close_impl(self, cls);
+
+    return return_value;
 }
 
 PyDoc_STRVAR(_io_FileIO___init____doc__,
@@ -42,8 +46,8 @@ PyDoc_STRVAR(_io_FileIO___init____doc__,
 "results in functionality similar to passing None).");
 
 static int
-_io_FileIO___init___impl(fileio *self, PyObject *nameobj, const char *mode,
-                         int closefd, PyObject *opener);
+_io_FileIO___init___impl(fileio *self, PyTypeObject *cls, PyObject *nameobj,
+                         const char *mode, int closefd, PyObject *opener);
 
 static int
 _io_FileIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -56,11 +60,19 @@ _io_FileIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     int closefd = 1;
     PyObject *opener = Py_None;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_FileIO___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &nameobj, &mode, &closefd, &opener)) {
         goto exit;
     }
-    return_value = _io_FileIO___init___impl((fileio *)self, nameobj, mode, closefd, opener);
+    return_value = _io_FileIO___init___impl((fileio *)self, cls, nameobj, mode, closefd, opener);
 
 exit:
     return return_value;
@@ -145,21 +157,22 @@ PyDoc_STRVAR(_io_FileIO_readinto__doc__,
 "Same as RawIOBase.readinto().");
 
 #define _IO_FILEIO_READINTO_METHODDEF    \
-    {"readinto", (PyCFunction)_io_FileIO_readinto, METH_O, _io_FileIO_readinto__doc__},
+    {"readinto", (PyCFunction)_io_FileIO_readinto, METH_METHOD|METH_VARARGS, _io_FileIO_readinto__doc__},
 
 static PyObject *
-_io_FileIO_readinto_impl(fileio *self, Py_buffer *buffer);
+_io_FileIO_readinto_impl(fileio *self, PyTypeObject *cls, Py_buffer *buffer);
 
 static PyObject *
-_io_FileIO_readinto(fileio *self, PyObject *arg)
+_io_FileIO_readinto(fileio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_buffer buffer = {NULL, NULL};
 
-    if (!PyArg_Parse(arg, "w*:readinto", &buffer)) {
+    if (!PyArg_ParseTuple(args, "w*:readinto",
+        &buffer)) {
         goto exit;
     }
-    return_value = _io_FileIO_readinto_impl(self, &buffer);
+    return_value = _io_FileIO_readinto_impl(self, cls, &buffer);
 
 exit:
     /* Cleanup for buffer */
@@ -202,22 +215,22 @@ PyDoc_STRVAR(_io_FileIO_read__doc__,
 "Return an empty bytes object at EOF.");
 
 #define _IO_FILEIO_READ_METHODDEF    \
-    {"read", (PyCFunction)_io_FileIO_read, METH_FASTCALL, _io_FileIO_read__doc__},
+    {"read", (PyCFunction)_io_FileIO_read, METH_METHOD|METH_VARARGS, _io_FileIO_read__doc__},
 
 static PyObject *
-_io_FileIO_read_impl(fileio *self, Py_ssize_t size);
+_io_FileIO_read_impl(fileio *self, PyTypeObject *cls, Py_ssize_t size);
 
 static PyObject *
-_io_FileIO_read(fileio *self, PyObject *const *args, Py_ssize_t nargs)
+_io_FileIO_read(fileio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
+    if (!PyArg_ParseTuple(args, "|O&:read",
         _Py_convert_optional_to_ssize_t, &size)) {
         goto exit;
     }
-    return_value = _io_FileIO_read_impl(self, size);
+    return_value = _io_FileIO_read_impl(self, cls, size);
 
 exit:
     return return_value;
@@ -234,21 +247,22 @@ PyDoc_STRVAR(_io_FileIO_write__doc__,
 "returns None if the write would block.");
 
 #define _IO_FILEIO_WRITE_METHODDEF    \
-    {"write", (PyCFunction)_io_FileIO_write, METH_O, _io_FileIO_write__doc__},
+    {"write", (PyCFunction)_io_FileIO_write, METH_METHOD|METH_VARARGS, _io_FileIO_write__doc__},
 
 static PyObject *
-_io_FileIO_write_impl(fileio *self, Py_buffer *b);
+_io_FileIO_write_impl(fileio *self, PyTypeObject *cls, Py_buffer *b);
 
 static PyObject *
-_io_FileIO_write(fileio *self, PyObject *arg)
+_io_FileIO_write(fileio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_buffer b = {NULL, NULL};
 
-    if (!PyArg_Parse(arg, "y*:write", &b)) {
+    if (!PyArg_ParseTuple(args, "y*:write",
+        &b)) {
         goto exit;
     }
-    return_value = _io_FileIO_write_impl(self, &b);
+    return_value = _io_FileIO_write_impl(self, cls, &b);
 
 exit:
     /* Cleanup for b */
@@ -328,23 +342,22 @@ PyDoc_STRVAR(_io_FileIO_truncate__doc__,
 "The current file position is changed to the value of size.");
 
 #define _IO_FILEIO_TRUNCATE_METHODDEF    \
-    {"truncate", (PyCFunction)_io_FileIO_truncate, METH_FASTCALL, _io_FileIO_truncate__doc__},
+    {"truncate", (PyCFunction)_io_FileIO_truncate, METH_METHOD|METH_VARARGS, _io_FileIO_truncate__doc__},
 
 static PyObject *
-_io_FileIO_truncate_impl(fileio *self, PyObject *posobj);
+_io_FileIO_truncate_impl(fileio *self, PyTypeObject *cls, PyObject *posobj);
 
 static PyObject *
-_io_FileIO_truncate(fileio *self, PyObject *const *args, Py_ssize_t nargs)
+_io_FileIO_truncate(fileio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     PyObject *posobj = NULL;
 
-    if (!_PyArg_UnpackStack(args, nargs, "truncate",
-        0, 1,
+    if (!PyArg_ParseTuple(args, "|O:truncate",
         &posobj)) {
         goto exit;
     }
-    return_value = _io_FileIO_truncate_impl(self, posobj);
+    return_value = _io_FileIO_truncate_impl(self, cls, posobj);
 
 exit:
     return return_value;
@@ -373,4 +386,4 @@ _io_FileIO_isatty(fileio *self, PyObject *Py_UNUSED(ignored))
 #ifndef _IO_FILEIO_TRUNCATE_METHODDEF
     #define _IO_FILEIO_TRUNCATE_METHODDEF
 #endif /* !defined(_IO_FILEIO_TRUNCATE_METHODDEF) */
-/*[clinic end generated code: output=a8796438c8b7c49a input=a9049054013a1b77]*/
+/*[clinic end generated code: output=1d409d4b910a3ebe input=a9049054013a1b77]*/
