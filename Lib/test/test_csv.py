@@ -1068,7 +1068,10 @@ class TestLeaks(unittest.TestCase):
             delta = rc-lastrc
             lastrc = rc
         # if csv.reader() leaks, last delta should be 3 or more
-        self.assertEqual(delta < 3, True)
+        #self.assertEqual(delta < 3, True)
+
+        # reader is now a heap type, that means one ref extra
+        self.assertEqual(delta < 4, True)
 
     def test_create_write(self):
         delta = 0
@@ -1084,7 +1087,10 @@ class TestLeaks(unittest.TestCase):
             delta = rc-lastrc
             lastrc = rc
         # if csv.writer() leaks, last delta should be 3 or more
-        self.assertEqual(delta < 3, True)
+        #self.assertEqual(delta < 3, True)
+
+        # writer is now a heap type, that means one ref extra
+        self.assertEqual(delta < 4, True)
 
     def test_read(self):
         delta = 0
