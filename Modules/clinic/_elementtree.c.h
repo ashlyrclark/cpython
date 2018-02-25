@@ -18,11 +18,9 @@ static PyObject *
 _elementtree_Element_append(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", NULL};
-    static _PyArg_Parser _parser = {"O!:append", _keywords, 0};
     PyObject *subelement;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O!:append",
         ((elementtreestate *)PyModule_GetState(PyType_GetModule(cls)))->Element_Type, &subelement)) {
         goto exit;
     }
@@ -55,7 +53,7 @@ PyDoc_STRVAR(_elementtree_Element___copy____doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT___COPY___METHODDEF    \
-    {"__copy__", (PyCFunction)_elementtree_Element___copy__, METH_METHOD|METH_VARARGS, _elementtree_Element___copy____doc__},
+    {"__copy__", (PyCFunction)_elementtree_Element___copy__, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element___copy____doc__},
 
 static PyObject *
 _elementtree_Element___copy___impl(ElementObject *self, PyTypeObject *cls);
@@ -86,11 +84,9 @@ static PyObject *
 _elementtree_Element___deepcopy__(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", NULL};
-    static _PyArg_Parser _parser = {"O!:__deepcopy__", _keywords, 0};
     PyObject *memo;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O!:__deepcopy__",
         &PyDict_Type, &memo)) {
         goto exit;
     }
@@ -168,11 +164,9 @@ static PyObject *
 _elementtree_Element_extend(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", NULL};
-    static _PyArg_Parser _parser = {"O:extend", _keywords, 0};
     PyObject *elements;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O:extend",
         &elements)) {
         goto exit;
     }
@@ -188,7 +182,7 @@ PyDoc_STRVAR(_elementtree_Element_find__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FIND_METHODDEF    \
-    {"find", (PyCFunction)_elementtree_Element_find, METH_METHOD|METH_VARARGS, _elementtree_Element_find__doc__},
+    {"find", (PyCFunction)_elementtree_Element_find, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_find__doc__},
 
 static PyObject *
 _elementtree_Element_find_impl(ElementObject *self, PyTypeObject *cls,
@@ -219,7 +213,7 @@ PyDoc_STRVAR(_elementtree_Element_findtext__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FINDTEXT_METHODDEF    \
-    {"findtext", (PyCFunction)_elementtree_Element_findtext, METH_METHOD|METH_VARARGS, _elementtree_Element_findtext__doc__},
+    {"findtext", (PyCFunction)_elementtree_Element_findtext, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_findtext__doc__},
 
 static PyObject *
 _elementtree_Element_findtext_impl(ElementObject *self, PyTypeObject *cls,
@@ -252,7 +246,7 @@ PyDoc_STRVAR(_elementtree_Element_findall__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FINDALL_METHODDEF    \
-    {"findall", (PyCFunction)_elementtree_Element_findall, METH_METHOD|METH_VARARGS, _elementtree_Element_findall__doc__},
+    {"findall", (PyCFunction)_elementtree_Element_findall, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_findall__doc__},
 
 static PyObject *
 _elementtree_Element_findall_impl(ElementObject *self, PyTypeObject *cls,
@@ -283,7 +277,7 @@ PyDoc_STRVAR(_elementtree_Element_iterfind__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_ITERFIND_METHODDEF    \
-    {"iterfind", (PyCFunction)_elementtree_Element_iterfind, METH_METHOD|METH_VARARGS, _elementtree_Element_iterfind__doc__},
+    {"iterfind", (PyCFunction)_elementtree_Element_iterfind, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_iterfind__doc__},
 
 static PyObject *
 _elementtree_Element_iterfind_impl(ElementObject *self, PyTypeObject *cls,
@@ -314,7 +308,7 @@ PyDoc_STRVAR(_elementtree_Element_get__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_GET_METHODDEF    \
-    {"get", (PyCFunction)_elementtree_Element_get, METH_METHOD|METH_VARARGS, _elementtree_Element_get__doc__},
+    {"get", (PyCFunction)_elementtree_Element_get, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_get__doc__},
 
 static PyObject *
 _elementtree_Element_get_impl(ElementObject *self, PyObject *key,
@@ -362,7 +356,7 @@ PyDoc_STRVAR(_elementtree_Element_iter__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_ITER_METHODDEF    \
-    {"iter", (PyCFunction)_elementtree_Element_iter, METH_METHOD|METH_VARARGS, _elementtree_Element_iter__doc__},
+    {"iter", (PyCFunction)_elementtree_Element_iter, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_iter__doc__},
 
 static PyObject *
 _elementtree_Element_iter_impl(ElementObject *self, PyTypeObject *cls,
@@ -392,7 +386,7 @@ PyDoc_STRVAR(_elementtree_Element_getiterator__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_GETITERATOR_METHODDEF    \
-    {"getiterator", (PyCFunction)_elementtree_Element_getiterator, METH_METHOD|METH_VARARGS, _elementtree_Element_getiterator__doc__},
+    {"getiterator", (PyCFunction)_elementtree_Element_getiterator, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_getiterator__doc__},
 
 static PyObject *
 _elementtree_Element_getiterator_impl(ElementObject *self, PyTypeObject *cls,
@@ -422,7 +416,7 @@ PyDoc_STRVAR(_elementtree_Element_itertext__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_ITERTEXT_METHODDEF    \
-    {"itertext", (PyCFunction)_elementtree_Element_itertext, METH_METHOD|METH_VARARGS, _elementtree_Element_itertext__doc__},
+    {"itertext", (PyCFunction)_elementtree_Element_itertext, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _elementtree_Element_itertext__doc__},
 
 static PyObject *
 _elementtree_Element_itertext_impl(ElementObject *self, PyTypeObject *cls);
@@ -453,12 +447,10 @@ static PyObject *
 _elementtree_Element_insert(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"nO!:insert", _keywords, 0};
     Py_ssize_t index;
     PyObject *subelement;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "nO!:insert",
         &index, ((elementtreestate *)PyModule_GetState(PyType_GetModule(cls)))->Element_Type, &subelement)) {
         goto exit;
     }
@@ -518,12 +510,10 @@ static PyObject *
 _elementtree_Element_makeelement(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"OO:makeelement", _keywords, 0};
     PyObject *tag;
     PyObject *attrib;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "OO:makeelement",
         &tag, &attrib)) {
         goto exit;
     }
@@ -548,11 +538,9 @@ static PyObject *
 _elementtree_Element_remove(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", NULL};
-    static _PyArg_Parser _parser = {"O!:remove", _keywords, 0};
     PyObject *subelement;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O!:remove",
         ((elementtreestate *)PyModule_GetState(PyType_GetModule(cls)))->Element_Type, &subelement)) {
         goto exit;
     }
@@ -568,22 +556,21 @@ PyDoc_STRVAR(_elementtree_Element_set__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_SET_METHODDEF    \
-    {"set", (PyCFunction)_elementtree_Element_set, METH_METHOD|METH_VARARGS, _elementtree_Element_set__doc__},
+    {"set", (PyCFunction)_elementtree_Element_set, METH_FASTCALL, _elementtree_Element_set__doc__},
 
 static PyObject *
 _elementtree_Element_set_impl(ElementObject *self, PyObject *key,
                               PyObject *value);
 
 static PyObject *
-_elementtree_Element_set(ElementObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
+_elementtree_Element_set(ElementObject *self, PyObject *const *args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"OO:set", _keywords, 0};
     PyObject *key;
     PyObject *value;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!_PyArg_UnpackStack(args, nargs, "set",
+        2, 2,
         &key, &value)) {
         goto exit;
     }
@@ -639,11 +626,9 @@ static PyObject *
 _elementtree_TreeBuilder_end(TreeBuilderObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", NULL};
-    static _PyArg_Parser _parser = {"O:end", _keywords, 0};
     PyObject *tag;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O:end",
         &tag)) {
         goto exit;
     }
@@ -687,12 +672,10 @@ static PyObject *
 _elementtree_TreeBuilder_start(TreeBuilderObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"O|O:start", _keywords, 0};
     PyObject *tag;
     PyObject *attrs = Py_None;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O|O:start",
         &tag, &attrs)) {
         goto exit;
     }
@@ -774,23 +757,22 @@ PyDoc_STRVAR(_elementtree_XMLParser_doctype__doc__,
 "\n");
 
 #define _ELEMENTTREE_XMLPARSER_DOCTYPE_METHODDEF    \
-    {"doctype", (PyCFunction)_elementtree_XMLParser_doctype, METH_METHOD|METH_VARARGS, _elementtree_XMLParser_doctype__doc__},
+    {"doctype", (PyCFunction)_elementtree_XMLParser_doctype, METH_FASTCALL, _elementtree_XMLParser_doctype__doc__},
 
 static PyObject *
 _elementtree_XMLParser_doctype_impl(XMLParserObject *self, PyObject *name,
                                     PyObject *pubid, PyObject *system);
 
 static PyObject *
-_elementtree_XMLParser_doctype(XMLParserObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
+_elementtree_XMLParser_doctype(XMLParserObject *self, PyObject *const *args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", "", NULL};
-    static _PyArg_Parser _parser = {"OOO:doctype", _keywords, 0};
     PyObject *name;
     PyObject *pubid;
     PyObject *system;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!_PyArg_UnpackStack(args, nargs, "doctype",
+        3, 3,
         &name, &pubid, &system)) {
         goto exit;
     }
@@ -806,7 +788,7 @@ PyDoc_STRVAR(_elementtree_XMLParser__setevents__doc__,
 "\n");
 
 #define _ELEMENTTREE_XMLPARSER__SETEVENTS_METHODDEF    \
-    {"_setevents", (PyCFunction)_elementtree_XMLParser__setevents, METH_METHOD|METH_VARARGS, _elementtree_XMLParser__setevents__doc__},
+    {"_setevents", (PyCFunction)_elementtree_XMLParser__setevents, METH_FASTCALL, _elementtree_XMLParser__setevents__doc__},
 
 static PyObject *
 _elementtree_XMLParser__setevents_impl(XMLParserObject *self,
@@ -814,15 +796,14 @@ _elementtree_XMLParser__setevents_impl(XMLParserObject *self,
                                        PyObject *events_to_report);
 
 static PyObject *
-_elementtree_XMLParser__setevents(XMLParserObject *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
+_elementtree_XMLParser__setevents(XMLParserObject *self, PyObject *const *args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"O|O:_setevents", _keywords, 0};
     PyObject *events_queue;
     PyObject *events_to_report = Py_None;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!_PyArg_UnpackStack(args, nargs, "_setevents",
+        1, 2,
         &events_queue, &events_to_report)) {
         goto exit;
     }
@@ -831,4 +812,4 @@ _elementtree_XMLParser__setevents(XMLParserObject *self, PyTypeObject *cls, PyOb
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=5130f3bbceac8a00 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=76b3b65083935f2e input=a9049054013a1b77]*/
