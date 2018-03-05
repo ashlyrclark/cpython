@@ -265,7 +265,7 @@ PyDoc_STRVAR(_io__Buffered_seek__doc__,
 "\n");
 
 #define _IO__BUFFERED_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io__Buffered_seek, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__Buffered_seek__doc__},
+    {"seek", (PyCFunction)_io__Buffered_seek, METH_METHOD|METH_VARARGS, _io__Buffered_seek__doc__},
 
 static PyObject *
 _io__Buffered_seek_impl(buffered *self, PyTypeObject *cls,
@@ -275,12 +275,10 @@ static PyObject *
 _io__Buffered_seek(buffered *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
-    static const char * const _keywords[] = {"", "", NULL};
-    static _PyArg_Parser _parser = {"O|i:seek", _keywords, 0};
     PyObject *targetobj;
     int whence = 0;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    if (!PyArg_ParseTuple(args, "O|i:seek",
         &targetobj, &whence)) {
         goto exit;
     }
@@ -337,6 +335,14 @@ _io_BufferedReader___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raw;
     Py_ssize_t buffer_size = DEFAULT_BUFFER_SIZE;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_BufferedReader___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &raw, &buffer_size)) {
         goto exit;
@@ -370,6 +376,14 @@ _io_BufferedWriter___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raw;
     Py_ssize_t buffer_size = DEFAULT_BUFFER_SIZE;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_BufferedWriter___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &raw, &buffer_size)) {
         goto exit;
@@ -434,13 +448,23 @@ static int
 _io_BufferedRWPair___init__(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     int return_value = -1;
-    static const char * const _keywords[] = {"", "", "", NULL};
-    static _PyArg_Parser _parser = {"OO|n:BufferedRWPair", _keywords, 0};
     PyObject *reader;
     PyObject *writer;
     Py_ssize_t buffer_size = DEFAULT_BUFFER_SIZE;
 
-    if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_BufferedRWPair___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
+    if ((Py_TYPE(self) == ((_PyIO_State *)PyModule_GetState(PyType_GetModule(cls)))->PyBufferedRWPair_Type) &&
+        !_PyArg_NoKeywords("BufferedRWPair", kwargs)) {
+        goto exit;
+    }
+    if (!PyArg_ParseTuple(args, "OO|n:BufferedRWPair",
         &reader, &writer, &buffer_size)) {
         goto exit;
     }
@@ -473,6 +497,14 @@ _io_BufferedRandom___init__(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raw;
     Py_ssize_t buffer_size = DEFAULT_BUFFER_SIZE;
 
+    PyTypeObject *cls;
+
+    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                          Py_tp_init,
+                                          &_io_BufferedRandom___init__);
+    if (cls == NULL) {
+        goto exit;
+    }
     if (!_PyArg_ParseTupleAndKeywordsFast(args, kwargs, &_parser,
         &raw, &buffer_size)) {
         goto exit;
@@ -482,4 +514,4 @@ _io_BufferedRandom___init__(PyObject *self, PyObject *args, PyObject *kwargs)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=7a2af4964fef7cd5 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=f8aefa47b0a783b6 input=a9049054013a1b77]*/

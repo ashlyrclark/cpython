@@ -730,9 +730,18 @@ class CLanguage(Language):
             }}
             """, indent=4)
 
+
         # parser_body_fields remembers the fields passed in to the
         # previous call to parser_body. this is used for an awful hack.
         parser_body_fields = ()
+        requires_defining_class = any(isinstance(p.converter, defining_class_converter)
+                                  for p in parameters)
+        subclass_of_heaptype = False
+        for c in converters:
+            if c.subclass_of and "PyModule_GetState" in c.subclass_of:
+                subclass_of_heaptype = True
+
+
         def parser_body(prototype, *fields):
             nonlocal parser_body_fields
             add, output = text_accumulator()
@@ -788,7 +797,7 @@ class CLanguage(Language):
             else:
                 parser_definition = parser_body(parser_prototype)
 
-        elif meth_o:
+        elif meth_o and not subclass_of_heaptype:
             flags = "METH_O"
 
             if (isinstance(converters[0], object_converter) and
@@ -825,30 +834,24 @@ class CLanguage(Language):
                     }}
                     """ % argname, indent=4))
 
-        elif any(isinstance(p.converter, defining_class_converter)
-               for p in parameters):
-            # As METH_METHOD supports all of these, we may leave these
-            # flags enabled all
-            flags = 'METH_METHOD|METH_VARARGS|METH_KEYWORDS'
-            parser_prototype = parser_prototype_def_class
-
-            # Only defining class is required, so no need of parsing
-            if len(parameters) > 1:
-                parser_definition = parser_body(parser_prototype, body_keyword)
-                parser_definition = insert_keywords(parser_definition)
-            else:
-                parser_definition = parser_body(parser_prototype)
-
-
         elif has_option_groups:
             # positional parameters with option groups
             # (we have to generate lots of PyArg_ParseTuple calls
             #  in a big switch statement)
 
-            flags = "METH_VARARGS"
-            parser_prototype = parser_prototype_varargs
+            if requires_defining_class:
+                flags = 'METH_METHOD|METH_VARARGS'
+                parser_prototype = parser_prototype_def_class
+                if len(parameters) > 1 or subclass_of_heaptype:
+                    parser_definition = parser_body(parser_prototype, body_keyword)
+                    parser_definition = insert_keywords(parser_definition)
+                else:
+                    parser_definition = parser_body(parser_prototype)
+            else:
+                flags = "METH_VARARGS"
+                parser_prototype = parser_prototype_varargs
 
-            parser_definition = parser_body(parser_prototype, '    {option_group_parsing}')
+                parser_definition = parser_body(parser_prototype, '    {option_group_parsing}')
 
 
         elif positional and all_boring_objects:
@@ -857,16 +860,25 @@ class CLanguage(Language):
             # PyArg_UnpackTuple!
 
             if not new_or_init:
-                flags = "METH_FASTCALL"
-                parser_prototype = parser_prototype_fastcall
+                if requires_defining_class:
+                    flags = 'METH_METHOD|METH_VARARGS'
+                    parser_prototype = parser_prototype_def_class
+                    if len(parameters) > 1 or subclass_of_heaptype:
+                        parser_definition = parser_body(parser_prototype, body_keyword)
+                        parser_definition = insert_keywords(parser_definition)
+                    else:
+                        parser_definition = parser_body(parser_prototype)
+                else:
+                    flags = "METH_FASTCALL"
+                    parser_prototype = parser_prototype_fastcall
 
-                parser_definition = parser_body(parser_prototype, normalize_snippet("""
-                    if (!_PyArg_UnpackStack(args, nargs, "{name}",
-                        {unpack_min}, {unpack_max},
-                        {parse_arguments})) {{
-                        goto exit;
-                    }}
-                    """, indent=4))
+                    parser_definition = parser_body(parser_prototype, normalize_snippet("""
+                        if (!_PyArg_UnpackStack(args, nargs, "{name}",
+                            {unpack_min}, {unpack_max},
+                            {parse_arguments})) {{
+                            goto exit;
+                        }}
+                        """, indent=4))
             else:
                 flags = "METH_VARARGS"
                 parser_prototype = parser_prototype_varargs
@@ -883,16 +895,28 @@ class CLanguage(Language):
             if not new_or_init:
                 # positional-only, but no option groups
                 # we only need one call to _PyArg_ParseStack
+                if requires_defining_class or subclass_of_heaptype:
+                    flags = 'METH_METHOD|METH_VARARGS'
+                    parser_prototype = parser_prototype_def_class
+                    if len(parameters) > 1 or subclass_of_heaptype:
+                        parser_definition = parser_body(parser_prototype, normalize_snippet("""
+                            if (!PyArg_ParseTuple(args, "{format_units}:{name}",
+                                {parse_arguments})) {{
+                                goto exit;
+                            }}
+                            """, indent=4))
+                    else:
+                        parser_definition = parser_body(parser_prototype)
+                else:
+                    flags = "METH_FASTCALL"
+                    parser_prototype = parser_prototype_fastcall
 
-                flags = "METH_FASTCALL"
-                parser_prototype = parser_prototype_fastcall
-
-                parser_definition = parser_body(parser_prototype, normalize_snippet("""
-                    if (!_PyArg_ParseStack(args, nargs, "{format_units}:{name}",
-                        {parse_arguments})) {{
-                        goto exit;
-                    }}
-                    """, indent=4))
+                    parser_definition = parser_body(parser_prototype, normalize_snippet("""
+                        if (!_PyArg_ParseStack(args, nargs, "{format_units}:{name}",
+                            {parse_arguments})) {{
+                            goto exit;
+                        }}
+                        """, indent=4))
             else:
                 # positional-only, but no option groups
                 # we only need one call to PyArg_ParseTuple
@@ -908,39 +932,60 @@ class CLanguage(Language):
                     """, indent=4))
 
         elif not new_or_init:
-            flags = "METH_FASTCALL|METH_KEYWORDS"
+            if requires_defining_class or (f.cls and f.cls.is_heaptype):
+                flags = 'METH_METHOD|METH_VARARGS|METH_KEYWORDS'
+                parser_prototype = parser_prototype_def_class
+                if len(parameters) > 1 or subclass_of_heaptype:
+                    parser_definition = parser_body(parser_prototype, body_keyword)
+                    parser_definition = insert_keywords(parser_definition)
+                else:
+                    parser_definition = parser_body(parser_prototype)
+            else:
+                flags = "METH_FASTCALL|METH_KEYWORDS"
 
-            parser_prototype = parser_prototype_fastcall_keywords
+                parser_prototype = parser_prototype_fastcall_keywords
 
-            body = normalize_snippet("""
-                if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
-                    {parse_arguments})) {{
-                    goto exit;
-                }}
-                """, indent=4)
-            parser_definition = parser_body(parser_prototype, body)
-            parser_definition = insert_keywords(parser_definition)
+                body = normalize_snippet("""
+                    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
+                        {parse_arguments})) {{
+                        goto exit;
+                    }}
+                    """, indent=4)
+                parser_definition = parser_body(parser_prototype, body)
+                parser_definition = insert_keywords(parser_definition)
         else:
             # positional-or-keyword arguments
-            flags = "METH_VARARGS|METH_KEYWORDS"
+            if requires_defining_class:
+                flags = 'METH_METHOD|METH_VARARGS|METH_KEYWORDS'
+                parser_prototype = parser_prototype_def_class
+                if len(parameters) > 1 or subclass_of_heaptype:
+                    parser_definition = parser_body(parser_prototype, body_keyword)
+                    parser_definition = insert_keywords(parser_definition)
+                else:
+                    parser_definition = parser_body(parser_prototype)
+            else:
+                flags = "METH_VARARGS|METH_KEYWORDS"
 
-            parser_prototype = parser_prototype_keyword
+                parser_prototype = parser_prototype_keyword
 
-            parser_definition = parser_body(parser_prototype, body_keyword)
-            parser_definition = insert_keywords(parser_definition)
+                parser_definition = parser_body(parser_prototype, body_keyword)
+                parser_definition = insert_keywords(parser_definition)
 
 
         if new_or_init:
             methoddef_define = ''
+            check_on_heaptype = False
 
             if f.kind == METHOD_NEW:
                 parser_prototype = parser_prototype_keyword
+                slot = "Py_tp_new"
             else:
                 return_value_declaration = "int return_value = -1;"
                 parser_prototype = normalize_snippet("""
                     static int
                     {c_basename}({self_type}{self_name}, PyObject *args, PyObject *kwargs)
                     """)
+                slot = "Py_tp_init"
 
             fields = list(parser_body_fields)
             parses_positional = 'METH_NOARGS' not in flags
@@ -949,6 +994,8 @@ class CLanguage(Language):
                 assert parses_positional
 
             if not parses_keywords:
+                if f.cls.is_heaptype:
+                    check_on_heaptype = True
                 fields.insert(0, normalize_snippet("""
                     if ({self_type_check}!_PyArg_NoKeywords("{name}", kwargs)) {{
                         goto exit;
@@ -961,9 +1008,25 @@ class CLanguage(Language):
                         }}
                         """, indent=4))
 
-            parser_definition = parser_body(parser_prototype, *fields)
-            if parses_keywords:
-                parser_definition = insert_keywords(parser_definition)
+
+            if requires_defining_class or check_on_heaptype:
+                fields.insert(0, normalize_snippet("""
+                    PyTypeObject *cls;
+
+                    cls = PyType_DefiningTypeFromSlotFunc(Py_TYPE(self),
+                                                          %s,
+                                                          &{c_basename});
+                    if (cls == NULL) {{
+                        goto exit;
+                    }}
+                    """ % slot, indent=4))
+                parser_definition = parser_body(parser_prototype, *fields)
+                if parses_keywords and len(parameters) > 1 or subclass_of_heaptype:
+                    parser_definition = insert_keywords(parser_definition)
+            else:
+                parser_definition = parser_body(parser_prototype, *fields)
+                if parses_keywords:
+                    parser_definition = insert_keywords(parser_definition)
 
 
         if f.methoddef_flags:
@@ -1994,6 +2057,11 @@ class Module:
 
 class Class:
     def __init__(self, name, module=None, cls=None, typedef=None, type_object=None):
+        if "!" in type_object:
+            self.state_name, type_object = type_object.split("!")
+            self.is_heaptype = True
+        else:
+            self.is_heaptype = False
         self.name = name
         self.module = module
         self.cls = cls
@@ -2736,6 +2804,10 @@ class object_converter(CConverter):
             self.converter = converter
         elif subclass_of:
             self.format_unit = 'O!'
+            if "!" in subclass_of:
+                state_name, type_object = subclass_of.split("!")
+                subclass_of = "(({st} *)PyModule_GetState(PyType_GetModule(cls)))->{to}".format(st=state_name,
+                                                                                                to=type_object)
             self.subclass_of = subclass_of
 
         if type is not None:
@@ -3031,9 +3103,16 @@ class self_converter(CConverter):
             else:
                 passed_in_type = 'Py_TYPE({})'.format(self.name)
 
+            cls = self.function.cls
+            if cls.is_heaptype:
+                type_object = "(({st} *)PyModule_GetState(PyType_GetModule(cls)))->{to}".format(st=cls.state_name,
+                                                                                                to=cls.type_object)
+            else:
+                type_object = cls.type_object
+
             line = '({passed_in_type} == {type_object}) &&\n        '
             d = {
-                'type_object': self.function.cls.type_object,
+                'type_object': type_object,
                 'passed_in_type': passed_in_type
                 }
             template_dict['self_type_check'] = line.format_map(d)
