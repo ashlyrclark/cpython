@@ -35,8 +35,7 @@
 #undef BYTE
 #include "windows.h"
 
-extern PyTypeObject PyWindowsConsoleIO_Type;
-#define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), &PyWindowsConsoleIO_Type))
+extern void *_PyWindowsConsoleIO_slot;
 #endif
 
 _Py_IDENTIFIER(flush);
@@ -1590,6 +1589,9 @@ create_stdio(PyObject* io,
     int fd, int write_mode, const char* name,
     const char* encoding, const char* errors)
 {
+#ifdef MS_WINDOWS
+    PyTypeObject *PyWindowsConsoleIO_Type;
+#endif
     PyObject *buf = NULL, *stream = NULL, *text = NULL, *raw = NULL, *res;
     const char* mode;
     const char* newline;
@@ -1635,9 +1637,22 @@ create_stdio(PyObject* io,
     }
 
 #ifdef MS_WINDOWS
+    /* IO types are now heap types, we need to get reference to
+     * WindowsConsoleIO_Type by using an MRO walker */
+    PyWindowsConsoleIO_Type = PyType_DefiningTypeFromSlotFunc(Py_TYPE(raw),
+                                                              Py_tp_init,
+                                                              _PyWindowsConsoleIO_slot);
+
     /* Windows console IO is always UTF-8 encoded */
-    if (PyWindowsConsoleIO_Check(raw))
+    if (PyWindowsConsoleIO_Type) {
         encoding = "utf-8";
+    }
+    else {
+        /* Defining class of winconsoleio was not found, so an exception
+         * was set. In this case, it is okay and just means this IO
+         * is not of Windows console type. */
+        PyErr_Clear();
+    } 
 #endif
 
     text = PyUnicode_FromString(name);

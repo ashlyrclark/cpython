@@ -375,7 +375,7 @@ _io_open_impl(PyObject *module, PyObject *file, const char *mode,
         PyObject *RawIO_class = (PyObject *)state->PyFileIO_Type;
 #ifdef MS_WINDOWS
         if (!Py_LegacyWindowsStdioFlag && _PyIO_get_console_type(path_or_fd) != '\0') {
-            RawIO_class = (PyObject *)&PyWindowsConsoleIO_Type;
+            RawIO_class = (PyObject *)state->PyWindowsConsoleIO_Type;
             encoding = "utf-8";
         }
 #endif
@@ -692,7 +692,6 @@ iomodule_exec(PyObject *m) {
 #ifdef MS_WINDOWS
     base_tuple = PyTuple_Pack(1, state->PyRawIOBase_Type);
     /* WindowsConsoleIO */
-    PyWindowsConsoleIO_Type.tp_base = &PyRawIOBase_Type;
     ADD_TYPE(PyWindowsConsoleIO_Type_spec, "_WindowsConsoleIO");
     state->PyWindowsConsoleIO_Type = (PyTypeObject *)temp;
 #endif

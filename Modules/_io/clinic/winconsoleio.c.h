@@ -14,15 +14,19 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_close__doc__,
 "called more than once without error.");
 
 #define _IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF    \
-    {"close", (PyCFunction)_io__WindowsConsoleIO_close, METH_NOARGS, _io__WindowsConsoleIO_close__doc__},
+    {"close", (PyCFunction)_io__WindowsConsoleIO_close, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__WindowsConsoleIO_close__doc__},
 
 static PyObject *
-_io__WindowsConsoleIO_close_impl(winconsoleio *self);
+_io__WindowsConsoleIO_close_impl(winconsoleio *self, PyTypeObject *cls);
 
 static PyObject *
-_io__WindowsConsoleIO_close(winconsoleio *self, PyObject *Py_UNUSED(ignored))
+_io__WindowsConsoleIO_close(winconsoleio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__WindowsConsoleIO_close_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__WindowsConsoleIO_close_impl(self, cls);
+
+    return return_value;
 }
 
 #endif /* defined(MS_WINDOWS) */
@@ -79,15 +83,19 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_fileno__doc__,
 "one of the standard streams.");
 
 #define _IO__WINDOWSCONSOLEIO_FILENO_METHODDEF    \
-    {"fileno", (PyCFunction)_io__WindowsConsoleIO_fileno, METH_NOARGS, _io__WindowsConsoleIO_fileno__doc__},
+    {"fileno", (PyCFunction)_io__WindowsConsoleIO_fileno, METH_METHOD|METH_VARARGS|METH_KEYWORDS, _io__WindowsConsoleIO_fileno__doc__},
 
 static PyObject *
-_io__WindowsConsoleIO_fileno_impl(winconsoleio *self);
+_io__WindowsConsoleIO_fileno_impl(winconsoleio *self, PyTypeObject *cls);
 
 static PyObject *
-_io__WindowsConsoleIO_fileno(winconsoleio *self, PyObject *Py_UNUSED(ignored))
+_io__WindowsConsoleIO_fileno(winconsoleio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
-    return _io__WindowsConsoleIO_fileno_impl(self);
+    PyObject *return_value = NULL;
+
+    return_value = _io__WindowsConsoleIO_fileno_impl(self, cls);
+
+    return return_value;
 }
 
 #endif /* defined(MS_WINDOWS) */
@@ -145,21 +153,23 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_readinto__doc__,
 "Same as RawIOBase.readinto().");
 
 #define _IO__WINDOWSCONSOLEIO_READINTO_METHODDEF    \
-    {"readinto", (PyCFunction)_io__WindowsConsoleIO_readinto, METH_O, _io__WindowsConsoleIO_readinto__doc__},
+    {"readinto", (PyCFunction)_io__WindowsConsoleIO_readinto, METH_METHOD|METH_VARARGS, _io__WindowsConsoleIO_readinto__doc__},
 
 static PyObject *
-_io__WindowsConsoleIO_readinto_impl(winconsoleio *self, Py_buffer *buffer);
+_io__WindowsConsoleIO_readinto_impl(winconsoleio *self, PyTypeObject *cls,
+                                    Py_buffer *buffer);
 
 static PyObject *
-_io__WindowsConsoleIO_readinto(winconsoleio *self, PyObject *arg)
+_io__WindowsConsoleIO_readinto(winconsoleio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_buffer buffer = {NULL, NULL};
 
-    if (!PyArg_Parse(arg, "w*:readinto", &buffer)) {
+    if (!PyArg_ParseTuple(args, "w*:readinto",
+        &buffer)) {
         goto exit;
     }
-    return_value = _io__WindowsConsoleIO_readinto_impl(self, &buffer);
+    return_value = _io__WindowsConsoleIO_readinto_impl(self, cls, &buffer);
 
 exit:
     /* Cleanup for buffer */
@@ -209,22 +219,23 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_read__doc__,
 "Return an empty bytes object at EOF.");
 
 #define _IO__WINDOWSCONSOLEIO_READ_METHODDEF    \
-    {"read", (PyCFunction)_io__WindowsConsoleIO_read, METH_FASTCALL, _io__WindowsConsoleIO_read__doc__},
+    {"read", (PyCFunction)_io__WindowsConsoleIO_read, METH_METHOD|METH_VARARGS, _io__WindowsConsoleIO_read__doc__},
 
 static PyObject *
-_io__WindowsConsoleIO_read_impl(winconsoleio *self, Py_ssize_t size);
+_io__WindowsConsoleIO_read_impl(winconsoleio *self, PyTypeObject *cls,
+                                Py_ssize_t size);
 
 static PyObject *
-_io__WindowsConsoleIO_read(winconsoleio *self, PyObject *const *args, Py_ssize_t nargs)
+_io__WindowsConsoleIO_read(winconsoleio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
+    if (!PyArg_ParseTuple(args, "|O&:read",
         _Py_convert_optional_to_ssize_t, &size)) {
         goto exit;
     }
-    return_value = _io__WindowsConsoleIO_read_impl(self, size);
+    return_value = _io__WindowsConsoleIO_read_impl(self, cls, size);
 
 exit:
     return return_value;
@@ -244,21 +255,23 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_write__doc__,
 "The number of bytes actually written is returned.");
 
 #define _IO__WINDOWSCONSOLEIO_WRITE_METHODDEF    \
-    {"write", (PyCFunction)_io__WindowsConsoleIO_write, METH_O, _io__WindowsConsoleIO_write__doc__},
+    {"write", (PyCFunction)_io__WindowsConsoleIO_write, METH_METHOD|METH_VARARGS, _io__WindowsConsoleIO_write__doc__},
 
 static PyObject *
-_io__WindowsConsoleIO_write_impl(winconsoleio *self, Py_buffer *b);
+_io__WindowsConsoleIO_write_impl(winconsoleio *self, PyTypeObject *cls,
+                                 Py_buffer *b);
 
 static PyObject *
-_io__WindowsConsoleIO_write(winconsoleio *self, PyObject *arg)
+_io__WindowsConsoleIO_write(winconsoleio *self, PyTypeObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *return_value = NULL;
     Py_buffer b = {NULL, NULL};
 
-    if (!PyArg_Parse(arg, "y*:write", &b)) {
+    if (!PyArg_ParseTuple(args, "y*:write",
+        &b)) {
         goto exit;
     }
-    return_value = _io__WindowsConsoleIO_write_impl(self, &b);
+    return_value = _io__WindowsConsoleIO_write_impl(self, cls, &b);
 
 exit:
     /* Cleanup for b */
@@ -328,4 +341,4 @@ _io__WindowsConsoleIO_isatty(winconsoleio *self, PyObject *Py_UNUSED(ignored))
 #ifndef _IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
     #define _IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
 #endif /* !defined(_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF) */
-/*[clinic end generated code: output=6d351a8200a8e848 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=754e3be97b9c2f28 input=a9049054013a1b77]*/

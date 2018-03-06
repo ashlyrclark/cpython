@@ -21,9 +21,9 @@ extern PyType_Spec PyIncrementalNewlineDecoder_Type_spec;
 
 #ifndef Py_LIMITED_API
 #ifdef MS_WINDOWS
-extern PyType_Spec PyWindowsConsoleIO_Type_Spec;
-PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type_Spec;
-#define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), (PyTypeObject*)_PyWindowsConsoleIO_Type))
+extern PyType_Spec PyWindowsConsoleIO_Type_spec;
+PyAPI_DATA(void *) _PyWindowsConsoleIO_slot;
+#define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), m_state->PyWindowsConsoleIO_Type))
 #endif /* MS_WINDOWS */
 #endif /* Py_LIMITED_API */
 
@@ -165,6 +165,7 @@ typedef struct {
     PyTypeObject *PyBufferedRWPair_Type;
     PyTypeObject *PyBufferedRandom_Type;
     PyTypeObject *PyTextIOWrapper_Type;
+    PyTypeObject *PyWindowsConsoleIO_Type;
     PyTypeObject *PyIncrementalNewlineDecoder_Type;
 } _PyIO_State;
 
