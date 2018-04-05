@@ -532,6 +532,7 @@ PyAPI_FUNC(PyObject *) _PyType_GetTextSignatureFromInternalDoc(const char *, con
 /* New in 3.7 */
 PyAPI_FUNC(PyObject *) PyType_GetModule(PyTypeObject *);
 PyAPI_FUNC(PyTypeObject *) PyType_DefiningTypeFromSlotFunc(PyTypeObject *, int, void *);
+PyAPI_FUNC(void *) PyType_GetModuleState(PyTypeObject *);
 #endif
 
 /* Generic operations on objects */
