@@ -165,7 +165,7 @@ def new(key, msg = None, digestmod = None):
     """
     if _hashlib.get_fips_mode():
         if digestmod is None:
-            digestmod = 'md5'
+            digestmod = 'sha256'
         name = _get_openssl_name(digestmod)
         result = _hmacopenssl.new(key, digestmod=name)
         if msg:
