@@ -85,7 +85,6 @@ static PyTypeObject EVPtype;
    We have one of these per algorithm */
 typedef struct {
     PyObject *name_obj;
-    EVP_MD_CTX ctxs[2];
     /* ctx_ptrs will point to ctxs unless an error occurred, when it will
        be NULL: */
     EVP_MD_CTX *ctx_ptrs[2];
@@ -464,7 +463,7 @@ EVP_tp_init(EVPobject *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    mc_ctx_init(&self->ctx, usedforsecurity);
+    mc_ctx_init(self->ctx, usedforsecurity);
     if (!EVP_DigestInit_ex(&self->ctx, digest, NULL)) {
         set_evp_exception();
         PyBuffer_Release(&view);
@@ -569,8 +568,8 @@ EVPnew(PyObject *name_obj,
     if (initial_ctx) {
         EVP_MD_CTX_copy(self->ctx, initial_ctx);
     } else {
-        mc_ctx_init(&self->ctx, usedforsecurity);
-        if (!EVP_DigestInit_ex(&self->ctx, digest, NULL)) {
+        mc_ctx_init(self->ctx, usedforsecurity);
+        if (!EVP_DigestInit_ex(self->ctx, digest, NULL)) {
             set_evp_exception();
             Py_DECREF(self);
             return NULL;
@@ -981,14 +980,18 @@ init_constructor_constant(EVPCachedInfo *cached_info, const char *name)
 {
     assert(cached_info);
     cached_info->name_obj = PyString_FromString(name);
+    EVP_MD_CTX *ctx;
+
+    ctx = EVP_MD_CTX_new();
+
     if (EVP_get_digestbyname(name)) {
         int i;
         for (i=0; i<2; i++) {
-            mc_ctx_init(&cached_info->ctxs[i], i);
-            if (EVP_DigestInit_ex(&cached_info->ctxs[i],
+            mc_ctx_init(ctx, i);
+            if (EVP_DigestInit_ex(ctx,
                                   EVP_get_digestbyname(name), NULL)) {
                 /* Success: */
-                cached_info->ctx_ptrs[i] = &cached_info->ctxs[i];
+                cached_info->ctx_ptrs[i] = ctx;
             } else {
                 /* Failure: */
                 cached_info->ctx_ptrs[i] = NULL;
