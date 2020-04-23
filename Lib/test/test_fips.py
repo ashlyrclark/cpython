@@ -7,13 +7,13 @@ import hashlib, _hashlib
 class HashlibFipsTests(unittest.TestCase):
 
     @unittest.skipUnless(_hashlib.get_fips_mode(), "Test only when FIPS is enabled")
-    #def test_fips_imports(self):
-    #    """blake2s and blake2b should fail to import in FIPS mode
-    #    """
-    #    with self.assertRaises(ValueError, msg='blake2s not available in FIPS'):
-    #        m = hashlib.blake2s()
-    #    with self.assertRaises(ValueError, msg='blake2b not available in FIPS'):
-    #        m = hashlib.blake2b()
+    def test_fips_imports(self):
+        """blake2s and blake2b should fail to import in FIPS mode
+        """
+        with self.assertRaises(ValueError, msg='blake2s not available in FIPS'):
+            m = hashlib.blake2s()
+        with self.assertRaises(ValueError, msg='blake2b not available in FIPS'):
+            m = hashlib.blake2b()
 
     def compare_hashes(self, python_hash, openssl_hash):
         """
@@ -35,11 +35,11 @@ class HashlibFipsTests(unittest.TestCase):
         self.compare_hashes(hashlib.blake2b(b'abc'), _hashlib.openssl_blake2b(b'abc'))
         self.compare_hashes(hashlib.blake2s(b'abc'), _hashlib.openssl_blake2s(b'abc'))
 
-    #def test_sha3_hashes(self):
-    #    self.compare_hashes(hashlib.sha3_224(b'abc'), _hashlib.openssl_sha3_224(b'abc'))
-    #    self.compare_hashes(hashlib.sha3_256(b'abc'), _hashlib.openssl_sha3_256(b'abc'))
-    #    self.compare_hashes(hashlib.sha3_384(b'abc'), _hashlib.openssl_sha3_384(b'abc'))
-    #    self.compare_hashes(hashlib.sha3_512(b'abc'), _hashlib.openssl_sha3_512(b'abc'))
+    def test_sha3_hashes(self):
+        self.compare_hashes(hashlib.sha3_224(b'abc'), _hashlib.openssl_sha3_224(b'abc'))
+        self.compare_hashes(hashlib.sha3_256(b'abc'), _hashlib.openssl_sha3_256(b'abc'))
+        self.compare_hashes(hashlib.sha3_384(b'abc'), _hashlib.openssl_sha3_384(b'abc'))
+        self.compare_hashes(hashlib.sha3_512(b'abc'), _hashlib.openssl_sha3_512(b'abc'))
 
     @unittest.skipIf(_hashlib.get_fips_mode(), "shake hashes are not available under FIPS")
     def test_shake_hashes(self):
