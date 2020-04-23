@@ -762,7 +762,9 @@ _hashlib_openssl_blake2b_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=7a838b1643cde13e input=37247f187d9c4f4a]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_blake2b512(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have blake2. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -782,7 +784,9 @@ _hashlib_openssl_blake2s_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=4eda6b40757471da input=36e42912f87ff123]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_blake2s256(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have blake2. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -802,7 +806,9 @@ _hashlib_openssl_sha3_224_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=144641c1d144b974 input=450128ca92633287]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_sha3_224(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have sha3. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -822,7 +828,9 @@ _hashlib_openssl_sha3_256_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=c61f1ab772d06668 input=dda801b8285bc25f]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_sha3_256(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have sha3. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -842,7 +850,9 @@ _hashlib_openssl_sha3_384_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=f68e4846858cf0ee input=3e2c46d271c64ec8]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_sha3_384(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have sha3. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -862,7 +872,9 @@ _hashlib_openssl_sha3_512_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=2eede478c159354a input=64e2cc0c094d56f4]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_sha3_512(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have sha3. Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -882,7 +894,9 @@ _hashlib_openssl_shake_128_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=bc49cdd8ada1fa97 input=395c17aac1eb4d2e]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_shake128(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have shake Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 /*[clinic input]
@@ -902,7 +916,9 @@ _hashlib_openssl_shake_256_impl(PyObject *module, PyObject *data_obj,
 /*[clinic end generated code: output=358d213be8852df7 input=4fcf0b80fb663690]*/
 
 {
-    return EVP_fast_new(module, data_obj, EVP_shake256(), usedforsecurity);
+    // TODO
+    // Looks like OpenSSl 1.0 doesn't have shake Make sure or raise an error. Or a different solution.
+    return NULL;
 }
 
 

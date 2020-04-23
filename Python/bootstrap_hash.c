@@ -412,9 +412,6 @@ dev_urandom_close(void)
 #include <openssl/rand.h>
 #include <_hashopenssl.h>
 
-#if (OPENSSL_VERSION_NUMBER < 0x10101000L) || defined(LIBRESSL_VERSION_NUMBER)
-#  error "py_openssl_drbg_urandom requires OpenSSL 1.1.1 for fork safety"
-#endif
 
 static int
 py_openssl_drbg_urandom(char *buffer, Py_ssize_t size, int raise)
@@ -424,7 +421,7 @@ py_openssl_drbg_urandom(char *buffer, Py_ssize_t size, int raise)
 
     if (!init) {
         init = 1;
-        res = OPENSSL_init_crypto(OPENSSL_INIT_ATFORK, NULL);
+	SSL_library_init();
         if (res == 0) {
             if (raise) {
                 _setException(PyExc_RuntimeError);
