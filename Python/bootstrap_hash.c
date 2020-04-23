@@ -409,9 +409,36 @@ dev_urandom_close(void)
 }
 #endif /* !MS_WINDOWS */
 
+#include <openssl/crypto.h>
+#include <openssl/err.h>
 #include <openssl/rand.h>
-#include <_hashopenssl.h>
 
+
+static void
+py_openssl_set_exception(PyObject* exc) {
+    unsigned long errcode;
+    const char *lib, *func, *reason;
+
+    errcode = ERR_peek_last_error();
+    if (!errcode) {
+        PyErr_SetString(exc, "unknown reasons");
+    }
+    ERR_clear_error();
+
+    lib = ERR_lib_error_string(errcode);
+    func = ERR_func_error_string(errcode);
+    reason = ERR_reason_error_string(errcode);
+
+    if (lib && func) {
+        PyErr_Format(exc, "[%s: %s] %s", lib, func, reason);
+    }
+    else if (lib) {
+        PyErr_Format(exc, "[%s] %s", lib, reason);
+    }
+    else {
+        PyErr_SetString(exc, reason);
+    }
+}
 
 static int
 py_openssl_drbg_urandom(char *buffer, Py_ssize_t size, int raise)
@@ -424,7 +451,7 @@ py_openssl_drbg_urandom(char *buffer, Py_ssize_t size, int raise)
 	SSL_library_init();
         if (res == 0) {
             if (raise) {
-                _setException(PyExc_RuntimeError);
+                py_openssl_set_exception(PyExc_RuntimeError);
             }
             return 0;
         }
@@ -444,7 +471,7 @@ py_openssl_drbg_urandom(char *buffer, Py_ssize_t size, int raise)
         return 1;
     } else {
         if (raise) {
-            _setException(PyExc_RuntimeError);
+            py_openssl_set_exception(PyExc_RuntimeError);
         }
         return 0;
     }
