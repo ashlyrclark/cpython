@@ -926,9 +926,15 @@ class SourceLoader(_LoaderBasics):
                 source_mtime is not None):
             source_dir = _path_split(source_path)[0]
             # Walk directories for __pycache__ containing the marker
-            while source_dir != "/"
-                pycache_marker = _path_join(source_dir, "__pycache__/nocache_marker")
-                marker_exists = _path_isfile(pycache_marker)
+            marker_exists = False
+            while True:
+                if source_dir == "":
+                    source_dir = path_sep
+                pycache_marker = _path_join(source_dir, f"__pycache__{path_sep}nocache_marker")
+                if _path_isfile(pycache_marker):
+                    marker_exists = True
+                if marker_exists or source_dir == path_sep:
+                    break
                 source_dir = _path_split(source_dir)[0]
             if not marker_exists:
                 if hash_based:
